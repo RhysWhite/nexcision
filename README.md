@@ -12,7 +12,7 @@ genomic site and the first token ends with its coordinate, for example:
 CP013831_180    01001101
 ```
 
-In this example, 180 is the genomic coordinate used to determine whether the row should be retained or removed.
+In this example, `180` is the genomic coordinate used to determine whether the row should be retained or removed.
 
 ## Install
 
