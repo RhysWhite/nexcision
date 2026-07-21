@@ -1,14 +1,18 @@
 # NEXCISION
 
-**Precise region-based excision of coordinate-labelled rows from NEXUS matrices.**
+**Precise removal of coordinate-labelled sites from NEXUS matrices.**
 
-NEXCISION removes matrix rows whose genomic coordinates overlap specified
-regions, while preserving the rest of the NEXUS file. It is designed for files
-where the first token on each matrix row ends with a genomic coordinate:
+NEXCISION removes matrix rows whose genomic coordinates fall within user-specified 
+intervals, while preserving the remaining structure and content of the NEXUS file. 
+
+It is designed for transposed NEXUS matrices in which each row represents a 
+genomic site and the first token ends with its coordinate, for example:
 
 ```text
 CP013831_180    01001101
 ```
+
+In this example, 180 is the genomic coordinate used to determine whether the row should be retained or removed.
 
 ## Install
 
