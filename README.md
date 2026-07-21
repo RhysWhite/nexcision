@@ -188,11 +188,32 @@ Use NEXCISION when genomic sites are represented as coordinate-labelled rows. Co
 
 Please cite NEXCISION if it contributes to an analysis, publication, report, or reusable workflow.
 
-GitHub citation metadata are provided in [`CITATION.cff`](CITATION.cff). A formal software citation and DOI can be added after archiving a release through a service such as Zenodo.
+GitHub citation metadata are provided in [`CITATION.cff`](CITATION.cff).
 
 ## Funding and affiliation
 
-Development of NEXCISION was **supported by funding from Genomics Aotearoa** and undertaken at **Public Health and Forensic Science (PHF Science), Aotearoa New Zealand**.
+<p align="center">
+  <a href="https://www.genomics-aotearoa.org.nz/">
+    <img
+      src="assets/genomics-aotearoa-logo.png"
+      alt="Genomics Aotearoa"
+      height="80">
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.phfscience.nz/">
+    <img
+      src="assets/phf-science-logo.png"
+      alt="PHF Science"
+      height="80">
+  </a>
+</p>
+
+<p align="center">
+  Development of NEXCISION was supported by
+  <strong>Genomics Aotearoa</strong> and undertaken at
+  <strong>Public Health and Forensic Science (PHF Science),
+  Aotearoa New Zealand</strong>.
+</p>
 
 NEXCISION was developed and is maintained by [Rhys White](https://github.com/RhysWhite).
 
