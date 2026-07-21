@@ -1,0 +1,9 @@
+#NEXUS
+Begin data;
+    Dimensions ntax=2 nchar=4;
+    Format datatype=standard symbols="01" gap=-;
+    Matrix
+    CP013831_100 0101
+    CP013831_500 0011
+    ;
+End;

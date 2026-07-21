@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68,<82"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nexcision"
+version = "0.1.0"
+description = "Precise region-based excision of coordinate-labelled rows from NEXUS matrices."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+  {name = "Rhys White"}
+]
+keywords = [
+  "nexus",
+  "genomics",
+  "bioinformatics",
+  "phylogenetics",
+  "recombination",
+  "filtering",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/RhysWhite/nexcision"
+Repository = "https://github.com/RhysWhite/nexcision"
+Issues = "https://github.com/RhysWhite/nexcision/issues"
+
+[project.scripts]
+nexcise = "nexcision.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

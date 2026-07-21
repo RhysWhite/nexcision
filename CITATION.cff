@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "Please cite NEXCISION if it contributes to your analysis."
+title: "NEXCISION"
+type: software
+authors:
+  - family-names: "White"
+    given-names: "Rhys"
+version: 0.1.0
+date-released: 2026-07-21
+repository-code: "https://github.com/RhysWhite/nexcision"
+license: MIT
+abstract: >-
+  Precise region-based excision of coordinate-labelled rows from NEXUS
+  matrices, with overlap-aware counts and reproducible run metadata.
+keywords:
+  - bioinformatics
+  - genomics
+  - NEXUS
+  - phylogenetics
+  - recombination
