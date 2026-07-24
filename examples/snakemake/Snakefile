@@ -1,0 +1,94 @@
+"""Minimal NEXCISION workflow with a report-gated downstream step.
+
+Run from this directory with:
+    snakemake --cores 1
+"""
+
+configfile: "config.yaml"
+
+OUTPUT_DIRECTORY = config.get("output_directory", "results")
+EXACT_REMOVED = config.get("exact_removed_rows")
+MINIMUM_REMOVED = config.get("minimum_removed_rows")
+FAIL_ON_WARNINGS = config.get("fail_on_warnings", False)
+
+if EXACT_REMOVED is not None and MINIMUM_REMOVED is not None:
+    raise ValueError(
+        "Set only one of 'exact_removed_rows' or 'minimum_removed_rows'."
+    )
+for key, value in (
+    ("exact_removed_rows", EXACT_REMOVED),
+    ("minimum_removed_rows", MINIMUM_REMOVED),
+):
+    if value is not None and (
+        not isinstance(value, int) or isinstance(value, bool) or value < 0
+    ):
+        raise ValueError(f"'{key}' must be a non-negative integer.")
+if not isinstance(FAIL_ON_WARNINGS, bool):
+    raise ValueError("'fail_on_warnings' must be true or false.")
+
+validation_flags = []
+if EXACT_REMOVED is not None:
+    validation_flags.extend(["--exact-removed", str(EXACT_REMOVED)])
+elif MINIMUM_REMOVED is not None:
+    validation_flags.extend(["--min-removed", str(MINIMUM_REMOVED)])
+if FAIL_ON_WARNINGS:
+    validation_flags.append("--fail-on-warnings")
+VALIDATION_FLAGS = " ".join(validation_flags)
+
+
+rule all:
+    input:
+        f"{OUTPUT_DIRECTORY}/downstream.ready"
+
+
+rule nexcise:
+    input:
+        nexus=config["input_nexus"],
+        regions=config["regions"]
+    output:
+        filtered=f"{OUTPUT_DIRECTORY}/filtered.nex",
+        counts=f"{OUTPUT_DIRECTORY}/removed_counts_per_region.tsv",
+        report=f"{OUTPUT_DIRECTORY}/nexcision_report.json"
+    shell:
+        r"""
+        nexcise {input.nexus:q} {input.regions:q} \
+          --output {output.filtered:q} \
+          --counts {output.counts:q} \
+          --report {output.report:q}
+        """
+
+
+rule validate_nexcision_report:
+    input:
+        nexus=config["input_nexus"],
+        regions=config["regions"],
+        filtered=rules.nexcise.output.filtered,
+        counts=rules.nexcise.output.counts,
+        report=rules.nexcise.output.report
+    output:
+        touch(f"{OUTPUT_DIRECTORY}/nexcision.validated")
+    params:
+        flags=VALIDATION_FLAGS
+    shell:
+        r"""
+        bash ../validate_report.sh {params.flags} \
+          --nexus {input.nexus:q} \
+          --regions {input.regions:q} \
+          {input.report:q} \
+          {input.filtered:q} \
+          {input.counts:q}
+        """
+
+
+rule downstream_analysis:
+    input:
+        filtered=rules.nexcise.output.filtered,
+        validated=rules.validate_nexcision_report.output
+    output:
+        f"{OUTPUT_DIRECTORY}/downstream.ready"
+    shell:
+        r"""
+        # Replace this placeholder with the downstream phylogenetic command.
+        printf 'Validated input ready for downstream analysis: %s\n' \
+          {input.filtered:q} > {output:q}
+        """

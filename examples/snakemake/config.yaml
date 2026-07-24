@@ -1,0 +1,11 @@
+# Paths are relative to examples/snakemake/, where the example is run.
+input_nexus: ../input.nex
+regions: ../regions.tsv
+output_directory: results
+
+# This bundled example is known to remove exactly three matrix rows.
+# For a different analysis, replace this with a justified expected value.
+exact_removed_rows: 3
+
+# Set to true when any NEXCISION warning should stop the workflow.
+fail_on_warnings: true
