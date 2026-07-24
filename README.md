@@ -134,6 +134,18 @@ NEXCISION can produce three outputs:
 
 Overlapping regions are counted independently, but each matrix row is removed only once.
 
+## Workflow integration
+
+The optional JSON report can be checked programmatically before downstream
+analysis proceeds. Workflows can enforce analysis-specific criteria such as an
+expected removal count, absence of warnings, consistency of matrix-row totals,
+or agreement with recorded SHA-256 checksums.
+
+A result of zero removed rows is not inherently an error. The appropriate
+acceptance rule depends on the supplied mask and analysis. See
+[Workflow integration](docs/workflow-integration.md) for shell and Snakemake
+examples, including a report-gated downstream step.
+
 ## Dimension handling
 
 By default, NEXCISION automatically selects the appropriate NEXUS dimension to update:
