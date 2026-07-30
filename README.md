@@ -200,7 +200,12 @@ Use NEXCISION when genomic sites are represented as coordinate-labelled rows. Co
 
 Please cite NEXCISION if it contributes to an analysis, publication, report, or reusable workflow.
 
+> White RT. **NEXCISION: exact, validated, and scalable excision of genomic regions from phylogenomic NEXUS matrices.** *bioRxiv* [Preprint]. 2026. doi: [https://doi.org/10.64898/2026.07.26.740842](https://doi.org/10.64898/2026.07.26.740842)
+
 GitHub citation metadata are provided in [`CITATION.cff`](CITATION.cff).
+
+The complete validation and benchmarking materials are available in the
+[NEXCISION benchmarking repository](https://github.com/RhysWhite/nexcision-benchmarking).
 
 ## Funding and affiliation
 
