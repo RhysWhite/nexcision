@@ -5,8 +5,8 @@ type: software
 authors:
   - family-names: "White"
     given-names: "Rhys"
-version: 0.1.0
-date-released: 2026-07-21
+version: 0.1.1
+date-released: 2026-08-10
 repository-code: "https://github.com/RhysWhite/nexcision"
 license: MIT
 abstract: >-

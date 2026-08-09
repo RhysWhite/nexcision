@@ -155,6 +155,9 @@ acceptance rule depends on the supplied mask and analysis. See
 [Workflow integration](docs/workflow-integration.md) for shell and Snakemake
 examples, including a report-gated downstream step.
 
+For a detailed plain-English explanation of how the program works, see the
+[Code walkthrough](docs/code-walkthrough.md).
+
 ## Dimension handling
 
 By default, NEXCISION automatically selects the appropriate NEXUS dimension to update:

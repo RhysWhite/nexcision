@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nexcision"
-version = "0.1.0"
+version = "0.1.1"
 description = "Precise region-based excision of coordinate-labelled rows from NEXUS matrices."
 readme = "README.md"
 requires-python = ">=3.10"
