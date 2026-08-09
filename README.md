@@ -16,6 +16,9 @@
   <a href="https://github.com/RhysWhite/nexcision/releases">
     <img src="https://img.shields.io/github/v/release/RhysWhite/nexcision?display_name=tag&sort=semver" alt="Latest release">
   </a>
+  <a href="https://anaconda.org/bioconda/nexcision">
+    <img src="https://anaconda.org/bioconda/nexcision/badges/version.svg" alt="Bioconda">
+  </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-2EA44F" alt="MIT License">
   </a>
@@ -45,6 +48,12 @@ In this example, `180` is the genomic coordinate used to determine whether the r
 - **NEXUS-aware** — safely updates `ntax` or transposed-matrix `nchar` values when appropriate.
 
 ## Quick start
+
+### Install with Bioconda
+
+```bash
+conda install -c conda-forge -c bioconda nexcision
+```
 
 ### Install from GitHub
 
