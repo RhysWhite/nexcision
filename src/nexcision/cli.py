@@ -61,6 +61,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Preserve non-comment matrix rows that do not match --position-regex.",
     )
     parser.add_argument(
+        "--allow-empty",
+        action="store_true",
+        help=(
+            "Permit filtering to remove every matrix row and produce nchar=0 "
+            "(disabled by default)."
+        ),
+    )
+    parser.add_argument(
         "--update-dimension",
         choices=("auto", "ntax", "nchar", "none"),
         default="auto",
@@ -94,6 +102,7 @@ def main(argv: list[str] | None = None) -> int:
             report_path=args.report,
             position_pattern=args.position_regex,
             allow_unparsed=args.allow_unparsed,
+            allow_empty=args.allow_empty,
             update_dimension=args.update_dimension,
             force=args.force,
         )

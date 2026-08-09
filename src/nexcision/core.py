@@ -65,39 +65,44 @@ def load_regions(path: str | Path) -> list[Region]:
             f"Cannot open regions file '{region_path}': {exc}"
         ) from exc
 
-    with handle:
-        for line_number, raw_line in enumerate(handle, start=1):
-            line = raw_line.strip()
-            if not line or line.startswith("#"):
-                continue
+    try:
+        with handle:
+            for line_number, raw_line in enumerate(handle, start=1):
+                line = raw_line.strip()
+                if not line or line.startswith("#"):
+                    continue
 
-            fields = re.split(r"\s+", line)
-            if fields[0].lower() == "start":
-                continue
-            if len(fields) < 2:
-                raise NexusFilterError(
-                    f"Regions file line {line_number} must contain start and end."
-                )
+                fields = re.split(r"\s+", line)
+                if fields[0].lower() == "start":
+                    continue
+                if len(fields) < 2:
+                    raise NexusFilterError(
+                        f"Regions file line {line_number} must contain start and end."
+                    )
 
-            try:
-                start = int(fields[0])
-                end = int(fields[1])
-            except ValueError as exc:
-                raise NexusFilterError(
-                    f"Regions file line {line_number} has non-integer coordinates: "
-                    f"{line!r}"
-                ) from exc
+                try:
+                    start = int(fields[0])
+                    end = int(fields[1])
+                except ValueError as exc:
+                    raise NexusFilterError(
+                        f"Regions file line {line_number} has non-integer coordinates: "
+                        f"{line!r}"
+                    ) from exc
 
-            if start < 1 or end < 1:
-                raise NexusFilterError(
-                    f"Regions file line {line_number} contains a coordinate below 1."
-                )
-            if start > end:
-                start, end = end, start
+                if start < 1 or end < 1:
+                    raise NexusFilterError(
+                        f"Regions file line {line_number} contains a coordinate below 1."
+                    )
+                if start > end:
+                    start, end = end, start
 
-            region_id = len(regions) + 1
-            name = fields[2] if len(fields) >= 3 else f"region_{region_id}"
-            regions.append(Region(region_id, start, end, name))
+                region_id = len(regions) + 1
+                name = fields[2] if len(fields) >= 3 else f"region_{region_id}"
+                regions.append(Region(region_id, start, end, name))
+    except UnicodeError as exc:
+        raise NexusFilterError(
+            f"Cannot decode regions file '{region_path}' as UTF-8: {exc}"
+        ) from exc
 
     if not regions:
         raise NexusFilterError(f"No valid regions were found in '{region_path}'.")
@@ -257,35 +262,119 @@ def _update_dimension(
     return updated, field, declared, kept_rows, None
 
 
-def _write_atomic(path: Path, content: str, *, force: bool) -> None:
-    path = path.resolve()
-    if path.exists() and not force:
-        raise NexusFilterError(
-            f"Output file already exists: '{path}'. Use --force to replace it."
-        )
+def _write_outputs_atomically(
+    outputs: Sequence[tuple[Path, str]],
+    *,
+    force: bool,
+) -> None:
+    """Stage and commit all outputs as one failure-safe operation.
 
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temp_name: str | None = None
+    Every file is first written to a temporary file in its destination
+    directory. No final output is replaced until all temporary files have
+    been written successfully. Existing files are backed up when ``force`` is
+    used so that an unexpected commit failure can be rolled back.
+    """
+
+    resolved = [(path.resolve(), content) for path, content in outputs]
+    paths = [path for path, _ in resolved]
+
+    for index, path in enumerate(paths):
+        for other in paths[index + 1 :]:
+            if path in other.parents or other in path.parents:
+                raise NexusFilterError(
+                    "Output paths must not be nested within one another."
+                )
+
+    for path in paths:
+        if path.exists():
+            if path.is_dir():
+                raise NexusFilterError(f"Output path is a directory: '{path}'.")
+            if not force:
+                raise NexusFilterError(
+                    f"Output file already exists: '{path}'. Use --force to replace it."
+                )
+
+        parent = path.parent
+        if parent.exists() and not parent.is_dir():
+            raise NexusFilterError(
+                f"Output parent path is not a directory: '{parent}'."
+            )
+
+    staged: list[tuple[Path, Path]] = []
+    backups: dict[Path, Path] = {}
+    committed: list[Path] = []
+
     try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            newline="",
-            dir=path.parent,
-            prefix=f".{path.name}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            handle.write(content)
-            temp_name = handle.name
-        os.replace(temp_name, path)
+        # Stage every output before touching any final destination.
+        for path, content in resolved:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                newline="",
+                dir=path.parent,
+                prefix=f".{path.name}.",
+                suffix=".tmp",
+                delete=False,
+            ) as handle:
+                handle.write(content)
+                staged.append((Path(handle.name), path))
+
+        # Move existing files aside so a failed forced replacement can roll back.
+        if force:
+            for path in paths:
+                if not path.exists():
+                    continue
+                descriptor, backup_name = tempfile.mkstemp(
+                    dir=path.parent,
+                    prefix=f".{path.name}.",
+                    suffix=".bak",
+                )
+                os.close(descriptor)
+                backup = Path(backup_name)
+                backup.unlink()
+                os.replace(path, backup)
+                backups[path] = backup
+
+        for temporary, path in staged:
+            os.replace(temporary, path)
+            committed.append(path)
+
     except OSError as exc:
-        if temp_name:
+        for temporary, _path in staged:
             try:
-                os.unlink(temp_name)
+                temporary.unlink()
+            except FileNotFoundError:
+                pass
             except OSError:
                 pass
-        raise NexusFilterError(f"Cannot write output file '{path}': {exc}") from exc
+
+        for path in committed:
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                pass
+            except OSError:
+                pass
+
+        for path, backup in backups.items():
+            if backup.exists():
+                try:
+                    os.replace(backup, path)
+                except OSError:
+                    pass
+
+        target_list = ", ".join(str(path) for path in paths)
+        raise NexusFilterError(
+            f"Cannot write output files ({target_list}): {exc}"
+        ) from exc
+
+    else:
+        for backup in backups.values():
+            try:
+                backup.unlink()
+            except FileNotFoundError:
+                pass
 
 
 def _counts_tsv(regions: Sequence[Region], removed_positions: Iterable[int]) -> str:
@@ -333,6 +422,7 @@ def filter_nexus_text(
     *,
     position_pattern: str = DEFAULT_POSITION_PATTERN,
     allow_unparsed: bool = False,
+    allow_empty: bool = False,
     update_dimension: DimensionPolicy = "auto",
 ) -> tuple[str, str, FilterResult]:
     """Filter coordinate-labelled rows from one NEXUS MATRIX block."""
@@ -424,6 +514,13 @@ def filter_nexus_text(
 
     matrix_rows = parsed_rows + unparsed_rows
     rows_kept = parsed_rows_kept + unparsed_rows
+    if rows_kept == 0 and not allow_empty:
+        raise NexusFilterError(
+            f"Filtering would remove all {matrix_rows} matrix rows. "
+            "No output was written. Use --allow-empty to create an empty "
+            "matrix intentionally."
+        )
+
     warnings: list[str] = []
     output_lines, dimension_name, dimension_before, dimension_after, warning = (
         _update_dimension(
@@ -463,6 +560,7 @@ def _run_report(
     result: FilterResult,
     position_pattern: str,
     allow_unparsed: bool,
+    allow_empty: bool,
     update_dimension: DimensionPolicy,
 ) -> str:
     payload = {
@@ -472,6 +570,7 @@ def _run_report(
             "regions": {"path": str(regions), "sha256": _sha256_file(regions)},
         },
         "parameters": {
+            "allow_empty": allow_empty,
             "allow_unparsed": allow_unparsed,
             "position_regex": position_pattern,
             "update_dimension": update_dimension,
@@ -500,6 +599,7 @@ def filter_nexus_file(
     report_path: str | Path | None = None,
     position_pattern: str = DEFAULT_POSITION_PATTERN,
     allow_unparsed: bool = False,
+    allow_empty: bool = False,
     update_dimension: DimensionPolicy = "auto",
     force: bool = False,
 ) -> FilterResult:
@@ -522,7 +622,7 @@ def filter_nexus_file(
 
     try:
         text = nexus.read_text(encoding="utf-8")
-    except OSError as exc:
+    except (OSError, UnicodeError) as exc:
         raise NexusFilterError(f"Cannot open NEXUS file '{nexus}': {exc}") from exc
 
     regions = load_regions(regions_file)
@@ -531,6 +631,7 @@ def filter_nexus_file(
         regions,
         position_pattern=position_pattern,
         allow_unparsed=allow_unparsed,
+        allow_empty=allow_empty,
         update_dimension=update_dimension,
     )
 
@@ -546,17 +647,16 @@ def filter_nexus_file(
             result=result,
             position_pattern=position_pattern,
             allow_unparsed=allow_unparsed,
+            allow_empty=allow_empty,
             update_dimension=update_dimension,
         )
 
-    for destination in destinations:
-        if destination.exists() and not force:
-            raise NexusFilterError(
-                f"Output file already exists: '{destination}'. Use --force to replace it."
-            )
-
-    _write_atomic(output, filtered, force=force)
-    _write_atomic(counts, counts_text, force=force)
+    output_contents: list[tuple[Path, str]] = [
+        (output, filtered),
+        (counts, counts_text),
+    ]
     if report is not None and report_text is not None:
-        _write_atomic(report, report_text, force=force)
+        output_contents.append((report, report_text))
+
+    _write_outputs_atomically(output_contents, force=force)
     return result
