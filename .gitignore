@@ -1,0 +1,21 @@
+# Python virtual environments
+.venv/
+venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Python package/build metadata
+*.egg-info/
+build/
+dist/
+
+# Test and coverage artefacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Operating-system/editor files
+.DS_Store
+Thumbs.db
