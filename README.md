@@ -17,7 +17,7 @@
     <img src="https://img.shields.io/github/v/release/RhysWhite/nexcision?display_name=tag&sort=semver" alt="Latest release">
   </a>
   <a href="https://anaconda.org/bioconda/nexcision">
-    <img src="https://anaconda.org/bioconda/nexcision/badges/version.svg" alt="Bioconda">
+    <img src="https://anaconda.org/bioconda/nexcision/badges/version.svg" /> 
   </a>
   <a href="https://anaconda.org/bioconda/nexcision">
     <img src="https://img.shields.io/conda/dn/bioconda/nexcision" alt="Conda Downloads">
