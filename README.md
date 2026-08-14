@@ -203,7 +203,7 @@ Run the full test suite with:
 python -m unittest discover -s tests -v
 ```
 
-GitHub Actions tests NEXCISION on Python 3.10, 3.11, 3.12, and 3.13, reproduces the bundled example, and builds an installable wheel.
+GitHub Actions runs the full test suite on Python 3.10–3.14 across Ubuntu, macOS, and Windows. After the test matrix passes, a separate packaging job builds and installs a wheel, reruns the tests against the installed wheel, and reproduces the bundled example.
 
 ## Scope and limitations
 
@@ -220,7 +220,7 @@ Please cite NEXCISION if it contributes to an analysis, publication, report, or 
 GitHub citation metadata are provided in [`CITATION.cff`](CITATION.cff).
 
 The complete validation and benchmarking materials are available in the
-[NEXCISION benchmarking repository](https://github.com/RhysWhite/nexcision-benchmarking).
+[NEXCISION benchmarking repository](https://github.com/RhysWhite/nexcision-benchmarking), archived at Zenodo with DOI [10.5281/zenodo.21935598](https://doi.org/10.5281/zenodo.21935598).
 
 ## Funding and affiliation
 

@@ -25,13 +25,14 @@ The report contains these top-level sections:
 |---|---|
 | `software` | NEXCISION name and version. |
 | `inputs` | Input paths and SHA-256 checksums. |
-| `parameters` | Coordinate pattern, unparsed-row policy, and dimension policy. |
+| `parameters` | Coordinate pattern, unparsed-row policy, empty-output policy, and dimension policy. |
 | `results` | Matrix-row totals, removal results, dimension handling, and warnings. |
 | `outputs` | Output paths and SHA-256 checksums. |
 
 The principal fields for automated checks are:
 
 ```text
+.parameters.allow_empty
 .results.matrix_rows_read
 .results.rows_removed
 .results.rows_kept

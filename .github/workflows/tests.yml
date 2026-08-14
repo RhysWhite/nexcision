@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
@@ -41,3 +44,54 @@ jobs:
 
       - name: Run tests
         run: python -m unittest discover -s tests -v
+
+  package:
+    name: Wheel and example validation
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Build wheel
+        run: python -m pip wheel --no-deps --wheel-dir dist .
+
+      - name: Create clean wheel-test environment
+        run: python -m venv wheel-test
+
+      - name: Install built wheel
+        run: wheel-test/bin/python -m pip install dist/nexcision-*.whl
+
+      - name: Check installed version
+        run: wheel-test/bin/nexcise --version
+
+      - name: Test installed wheel
+        run: |
+          cd /tmp
+          PYTHONDONTWRITEBYTECODE=1 \
+            "$GITHUB_WORKSPACE/wheel-test/bin/python" \
+            -m unittest discover \
+            -s "$GITHUB_WORKSPACE/tests" \
+            -v
+
+      - name: Reproduce bundled example
+        run: |
+          mkdir example-output
+          cd example-output
+
+          ../wheel-test/bin/nexcise \
+            ../examples/input.nex \
+            ../examples/regions.tsv \
+            --output filtered.nex \
+            --counts removed_counts_per_region.tsv \
+            --report nexcision_report.json
+
+          cmp ../examples/expected_filtered.nex filtered.nex
+          cmp ../examples/expected_removed_counts_per_region.tsv \
+            removed_counts_per_region.tsv
