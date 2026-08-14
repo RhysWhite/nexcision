@@ -25,7 +25,7 @@
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-2EA44F" alt="MIT License">
   </a>
-  <a href="https://doi.org/10.5281/zenodo.21936048"><img src="https://zenodo.org/badge/1307110341.svg" alt="DOI">
+  <a href="https://doi.org/10.5281/zenodo.21936049"><img src="https://zenodo.org/badge/1307110341.svg" alt="DOI">
   </a>
 </p>
 
