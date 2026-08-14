@@ -19,6 +19,9 @@
   <a href="https://anaconda.org/bioconda/nexcision">
     <img src="https://anaconda.org/bioconda/nexcision/badges/version.svg" alt="Bioconda">
   </a>
+  <a href="https://anaconda.org/bioconda/nexcision">
+    <img src="https://img.shields.io/conda/dn/bioconda/nexcision" alt="Conda Downloads">
+  </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-2EA44F" alt="MIT License">
   </a>
