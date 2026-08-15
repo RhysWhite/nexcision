@@ -1,6 +1,6 @@
 <p align="center">
   <img
-    src="assets/nexcision_precise_genomic_site_removal.png"
+    src="https://raw.githubusercontent.com/RhysWhite/nexcision/main/assets/nexcision_precise_genomic_site_removal.png"
     alt="NEXCISION — precise removal of coordinate-labelled sites from NEXUS matrices"
     width="1000"
   >
@@ -15,6 +15,12 @@
   </a>
   <a href="https://github.com/RhysWhite/nexcision/releases">
     <img src="https://img.shields.io/github/v/release/RhysWhite/nexcision?display_name=tag&sort=semver" alt="Latest release">
+  </a>
+  <a href="https://pypi.org/project/nexcision/">
+    <img src="https://img.shields.io/pypi/v/nexcision" alt="PyPI">
+  </a>
+  <a href="https://nexcision.readthedocs.io/">
+    <img src="https://readthedocs.org/projects/nexcision/badge/?version=latest" alt="Documentation status">
   </a>
   <a href="https://anaconda.org/bioconda/nexcision">
     <img src="https://anaconda.org/bioconda/nexcision/badges/version.svg" /> 
@@ -54,23 +60,30 @@ In this example, `180` is the genomic coordinate used to determine whether the r
 
 ## Quick start
 
+### Install with pip
+
+```bash
+python -m pip install nexcision
+```
+
 ### Install with Bioconda
 
 ```bash
 conda install -c conda-forge -c bioconda nexcision
 ```
 
-### Install from GitHub
+### Install the stable tagged release from GitHub
 
 ```bash
-python -m pip install git+https://github.com/RhysWhite/nexcision.git
+python -m pip install git+https://github.com/RhysWhite/nexcision.git@v0.1.1
 ```
 
-Alternatively, clone the repository and install it locally:
+Alternatively, clone the tagged release and install it locally:
 
 ```bash
 git clone https://github.com/RhysWhite/nexcision.git
 cd nexcision
+git checkout v0.1.1
 python -m pip install .
 ```
 
@@ -89,7 +102,7 @@ Existing outputs are not overwritten unless `--force` is supplied.
 
 <p align="center">
   <img
-    src="assets/software_tool_for_nexus_matrix_editing.png"
+    src="https://raw.githubusercontent.com/RhysWhite/nexcision/main/assets/software_tool_for_nexus_matrix_editing.png"
     alt="NEXCISION workflow showing coordinate-labelled matrix rows removed using user-defined genomic intervals"
     width="1200"
   >
@@ -229,14 +242,14 @@ The complete validation and benchmarking materials are available in the
 <p align="center">
   <a href="https://www.genomics-aotearoa.org.nz/">
     <img
-      src="assets/genomics-aotearoa-logo.png"
+      src="https://raw.githubusercontent.com/RhysWhite/nexcision/main/assets/genomics-aotearoa-logo.png"
       alt="Genomics Aotearoa"
       height="80">
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://www.phfscience.nz/">
     <img
-      src="assets/phf-science-logo.png"
+      src="https://raw.githubusercontent.com/RhysWhite/nexcision/main/assets/phf-science-logo.png"
       alt="PHF Science"
       height="80">
   </a>

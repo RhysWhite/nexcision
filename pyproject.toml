@@ -33,6 +33,7 @@ dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/RhysWhite/nexcision"
+Documentation = "https://nexcision.readthedocs.io/"
 Repository = "https://github.com/RhysWhite/nexcision"
 Issues = "https://github.com/RhysWhite/nexcision/issues"
 

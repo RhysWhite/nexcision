@@ -8,6 +8,12 @@ It is designed primarily for transposed NEXUS matrices in which each matrix row 
 
 NEXCISION requires Python 3.10 or later.
 
+### PyPI
+
+```bash
+python -m pip install nexcision
+```
+
 ### Bioconda
 
 ```bash
@@ -17,12 +23,10 @@ conda install -c conda-forge -c bioconda nexcision
 ### Stable tagged release
 
 ```bash
-git clone https://github.com/RhysWhite/nexcision.git
-cd nexcision
-git checkout v0.1.1
-python -m pip install .
-nexcise --version
+python -m pip install git+https://github.com/RhysWhite/nexcision.git@v0.1.1
 ```
+
+See [Installation](installation.md) for all installation options.
 
 ## Basic usage
 

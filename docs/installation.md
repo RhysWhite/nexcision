@@ -2,6 +2,26 @@
 
 NEXCISION is a dependency-free Python command-line tool and requires Python 3.10 or later.
 
+## PyPI
+
+Install the current stable release from PyPI:
+
+```bash
+python -m pip install nexcision
+```
+
+To install the current release explicitly by version:
+
+```bash
+python -m pip install nexcision==0.1.1
+```
+
+Confirm the installed version with:
+
+```bash
+nexcise --version
+```
+
 ## Bioconda
 
 The recommended installation method for Conda-based bioinformatics environments is Bioconda:
