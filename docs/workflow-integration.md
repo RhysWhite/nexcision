@@ -107,7 +107,7 @@ fi
 
 ## Use the bundled validator
 
-[`examples/validate_report.sh`](../examples/validate_report.sh) performs the
+[`examples/validate_report.sh`](https://github.com/RhysWhite/nexcision/blob/main/examples/validate_report.sh) performs the
 following checks:
 
 1. required report fields have the expected types;
@@ -173,7 +173,7 @@ snakemake --cores 1
 ```
 
 The example uses the repository's bundled input and expects exactly three rows
-to be removed. Edit [`config.yaml`](../examples/snakemake/config.yaml) before
+to be removed. Edit [`config.yaml`](https://github.com/RhysWhite/nexcision/blob/main/examples/snakemake/config.yaml) before
 adapting it to another dataset. Set either `exact_removed_rows` or
 `minimum_removed_rows`, not both. Omit both settings when zero removals are
 acceptable.

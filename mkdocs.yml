@@ -1,0 +1,22 @@
+site_name: NEXCISION
+site_description: Exact, validated excision of coordinate-defined genomic regions from transposed NEXUS matrices
+site_url: https://nexcision.readthedocs.io/
+repo_url: https://github.com/RhysWhite/nexcision
+repo_name: RhysWhite/nexcision
+edit_uri: edit/main/docs/
+
+theme:
+  name: readthedocs
+
+nav:
+  - Home: index.md
+  - Workflow integration: workflow-integration.md
+  - Code walkthrough: code-walkthrough.md
+
+markdown_extensions:
+  - fenced_code
+  - tables
+  - toc:
+      permalink: true
+
+strict: true

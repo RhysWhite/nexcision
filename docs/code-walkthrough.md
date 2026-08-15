@@ -57,7 +57,7 @@ This tells Python packaging tools to create a command named `nexcise`. When that
 
 ### `src/nexcision/_version.py`
 
-[Source](../src/nexcision/_version.py)
+[Source](https://github.com/RhysWhite/nexcision/blob/main/src/nexcision/_version.py)
 
 ```python
 1  """Single source of truth for the NEXCISION version."""
@@ -71,7 +71,7 @@ The command-line `--version` output and the JSON provenance report both ultimate
 
 ### `src/nexcision/__init__.py`
 
-[Source](../src/nexcision/__init__.py)
+[Source](https://github.com/RhysWhite/nexcision/blob/main/src/nexcision/__init__.py)
 
 ```python
 1   """NEXCISION: precise region-based excision from NEXUS matrices."""
@@ -102,7 +102,7 @@ No filtering happens in this file.
 
 ### `src/nexcision/__main__.py`
 
-[Source](../src/nexcision/__main__.py)
+[Source](https://github.com/RhysWhite/nexcision/blob/main/src/nexcision/__main__.py)
 
 ```python
 1  """Run NEXCISION with ``python -m nexcision``."""
@@ -119,7 +119,7 @@ This is why `python -m nexcision ...` and `nexcise ...` use the same program log
 
 ## 3. Command-line interface: `cli.py`
 
-[Full source](../src/nexcision/cli.py)
+[Full source](https://github.com/RhysWhite/nexcision/blob/main/src/nexcision/cli.py)
 
 ### Lines 1–10: imports
 
@@ -409,7 +409,7 @@ Exit code `0` indicates successful completion.
 
 ## 4. Core implementation: `core.py`
 
-[Full source](../src/nexcision/core.py)
+[Full source](https://github.com/RhysWhite/nexcision/blob/main/src/nexcision/core.py)
 
 `core.py` contains the input validation, coordinate parsing, filtering, dimension correction, count generation, checksum generation, report construction, and output-write logic.
 
@@ -1935,7 +1935,7 @@ After all requested outputs have been committed successfully, `main()` prints th
 
 ## 19. Safety regression tests added for v0.1.1
 
-The permanent tests in [`tests/test_release_safety.py`](../tests/test_release_safety.py) exercise the safety behaviour restored in v0.1.1.
+The permanent tests in [`tests/test_release_safety.py`](https://github.com/RhysWhite/nexcision/blob/main/tests/test_release_safety.py) exercise the safety behaviour restored in v0.1.1.
 
 They check that:
 
