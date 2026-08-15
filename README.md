@@ -10,28 +10,35 @@
   <a href="https://github.com/RhysWhite/nexcision/actions/workflows/tests.yml">
     <img src="https://github.com/RhysWhite/nexcision/actions/workflows/tests.yml/badge.svg" alt="Tests">
   </a>
-  <a href="https://www.python.org/downloads/">
-    <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
-  </a>
-  <a href="https://github.com/RhysWhite/nexcision/releases">
-    <img src="https://img.shields.io/github/v/release/RhysWhite/nexcision?display_name=tag&sort=semver" alt="Latest release">
-  </a>
   <a href="https://pypi.org/project/nexcision/">
     <img src="https://img.shields.io/pypi/v/nexcision" alt="PyPI">
+  </a>
+  <a href="https://anaconda.org/bioconda/nexcision">
+    <img src="https://anaconda.org/bioconda/nexcision/badges/version.svg" alt="Bioconda">
   </a>
   <a href="https://nexcision.readthedocs.io/">
     <img src="https://readthedocs.org/projects/nexcision/badge/?version=latest" alt="Documentation status">
   </a>
-  <a href="https://anaconda.org/bioconda/nexcision">
-    <img src="https://anaconda.org/bioconda/nexcision/badges/version.svg" /> 
+</p>
+
+<p align="center">
+  <a href="https://github.com/RhysWhite/nexcision/releases">
+    <img src="https://img.shields.io/github/v/release/RhysWhite/nexcision?display_name=tag&sort=semver" alt="Latest release">
+  </a>
+  <a href="https://www.python.org/downloads/">
+    <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
   </a>
   <a href="https://anaconda.org/bioconda/nexcision">
     <img src="https://img.shields.io/conda/dn/bioconda/nexcision" alt="Conda Downloads">
   </a>
+  <a href="https://bio.tools/nexcision">
+    <img src="https://img.shields.io/badge/bio.tools-nexcision-005a9c" alt="bio.tools">
+  </a>
+  <a href="https://doi.org/10.5281/zenodo.21936049">
+    <img src="https://zenodo.org/badge/1307110341.svg" alt="DOI">
+  </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-2EA44F" alt="MIT License">
-  </a>
-  <a href="https://doi.org/10.5281/zenodo.21936049"><img src="https://zenodo.org/badge/1307110341.svg" alt="DOI">
   </a>
 </p>
 
