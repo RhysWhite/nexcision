@@ -10,6 +10,11 @@ theme:
 
 nav:
   - Home: index.md
+  - Installation: installation.md
+  - Input formats: input-formats.md
+  - Filtering and coordinates: filtering-and-coordinates.md
+  - Outputs and provenance: outputs-and-provenance.md
+  - Validation and benchmarking: validation.md
   - Workflow integration: workflow-integration.md
   - Code walkthrough: code-walkthrough.md
 
