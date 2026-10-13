@@ -79,6 +79,35 @@ This is limited, comment-aware handling for the supported **one-matrix,
 coordinate-labelled-row** model, not validation or rewriting of arbitrary
 NEXUS commands and linked character partitions.
 
+## Linked NEXUS metadata and partitions
+
+NEXCISION changes **matrix row numbering** when one or more sites are
+removed. Other NEXUS statements may refer to characters by position and
+become invalid after this change. NEXCISION deliberately does **not** attempt
+to interpret or renumber those linked definitions.
+
+If at least one matrix row would be excised, the program rejects files
+containing recognized character-indexed commands outside MATRIX, including
+`CHARSET`, `CHARPARTITION`, `EXSET`, `WTSET`, `TYPESET`, `ANCSTATES`,
+`CODONPOSSET`, `CODESET`, `ELIMINATE`, `CHARLABELS`, `STATELABELS`,
+`CHARSTATELABELS`, and `CHARWEIGHTS`. For non-transposed matrices, it also
+rejects recognized taxon-indexed definitions (e.g. `TAXSET`, `TAXPARTITION`,
+`TAXLABELS`, `TRANSLATE`, `TREE`, and `UTREE`) because filtering removes taxa
+rather than characters. Taxon sets in transposed matrices remain permissible
+because the taxa (columns) do not change.
+
+The guard recognizes NEXUS commands outside the matrix, ignoring appearances
+of their names inside quoted strings or bracket comments. A true no-op filter
+(`0` removed rows) preserves linked metadata without modification. The guard
+applies even when `--update-dimension none` is supplied and fails before any
+output is written or overwritten.
+
+To excise sites from a file containing such metadata, first remove or
+regenerate the positional definitions in a separate, validated NEXUS-aware
+workflow. NEXCISION is **not a complete NEXUS validator**: custom extensions
+and other unrecognized commands may also depend on character order. Users
+must validate linked metadata that falls outside the supported model.
+
 ## Line endings and retained text
 
 NEXCISION reads valid UTF-8 NEXUS files without converting newline sequences.

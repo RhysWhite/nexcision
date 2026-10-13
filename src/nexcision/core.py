@@ -297,6 +297,86 @@ def _matrix_is_transposed(syntax_prefix: str) -> bool:
     return False
 
 
+# The rows in the supported transposed matrix model are characters, so
+# excision changes their numerical positions. These NEXUS statements can
+# define positional metadata that cannot safely be left untouched. This is
+# deliberately a conservative allow-list *of hazards*, not a general NEXUS
+# grammar or an attempt to renumber external definitions.
+_CHARACTER_INDEXED_COMMANDS = frozenset(
+    {
+        "charset",
+        "charpartition",
+        "charlabels",
+        "charstatelabels",
+        "statelabels",
+        "eliminate",
+        "exset",
+        "wtset",
+        "typeset",
+        "ancstates",
+        "codonposset",
+        "codeset",
+        "charweights",
+    }
+)
+
+# When rows represent taxa rather than characters, linked taxon definitions
+# may also become stale. TRANSPOSE is determined from the input declaration,
+# not from the user-selected dimension-update override.
+_TAXON_INDEXED_COMMANDS = frozenset(
+    {
+        "taxset",
+        "taxpartition",
+        "taxlabels",
+        "translate",
+        "tree",
+        "utree",
+    }
+)
+
+
+def _reject_indexed_metadata(
+    lines: Sequence[str],
+    matrix_start: int,
+    matrix_end: int,
+    matrix_terminator: int,
+) -> None:
+    """Fail closed on known position-linked commands when rows are removed.
+
+    Only commands outside MATRIX are examined. Masking comments and quoted
+    strings before splitting real semicolon-delimited statements prevents
+    matching textual mentions of a command and quoted semicolons. This check
+    intentionally does not purport to validate arbitrary NEXUS extensions.
+    """
+
+    prefix = "".join(lines[:matrix_start])
+    suffix = (
+        lines[matrix_end][matrix_terminator + 1 :]
+        + "".join(lines[matrix_end + 1 :])
+    )
+    syntax = _nexus_syntax(prefix + "\n" + suffix)
+    # NEXUS's magic header is not itself a semicolon-terminated command.
+    syntax = re.sub(r"(?im)^\s*#nexus\b", "", syntax, count=1)
+    changed_taxa = not _matrix_is_transposed(_nexus_syntax(prefix))
+    hazardous = _CHARACTER_INDEXED_COMMANDS
+    if changed_taxa:
+        hazardous = hazardous | _TAXON_INDEXED_COMMANDS
+
+    for statement in syntax.split(";"):
+        match = re.match(r"\s*([A-Za-z][A-Za-z0-9_]*)\b", statement)
+        if match is None:
+            continue
+        command = match.group(1).lower()
+        if command in hazardous:
+            raise NexusFilterError(
+                f"NEXUS {command.upper()} metadata may contain character- or "
+                "taxon-indexed references that become invalid after matrix-row "
+                "excision. NEXCISION cannot safely renumber these definitions; "
+                "remove or rebuild the linked metadata before filtering. "
+                "No output was written."
+            )
+
+
 def _resolve_dimension(policy: DimensionPolicy, prefix: str) -> str | None:
     if policy == "none":
         return None
@@ -557,6 +637,8 @@ def filter_nexus_text(
     output_lines = lines[: matrix_start + 1]
     in_matrix = True
     terminated = False
+    matrix_end = -1
+    matrix_terminator = -1
     parsed_rows = 0
     rows_removed = 0
     parsed_rows_kept = 0
@@ -585,6 +667,8 @@ def filter_nexus_text(
             if semicolon >= 0:
                 in_matrix = False
                 terminated = True
+                matrix_end = index
+                matrix_terminator = semicolon
             continue
 
         parsed = _parse_coordinate_label(content, pattern)
@@ -599,6 +683,8 @@ def filter_nexus_text(
             if semicolon >= 0:
                 in_matrix = False
                 terminated = True
+                matrix_end = index
+                matrix_terminator = semicolon
             continue
 
         position, row_reference_label = parsed
@@ -633,6 +719,8 @@ def filter_nexus_text(
         if semicolon >= 0:
             in_matrix = False
             terminated = True
+            matrix_end = index
+            matrix_terminator = semicolon
 
     if not terminated:
         raise NexusFilterError("The MATRIX block is not terminated by a semicolon.")
@@ -649,6 +737,9 @@ def filter_nexus_text(
             "No output was written. Use --allow-empty to create an empty "
             "matrix intentionally."
         )
+
+    if rows_removed:
+        _reject_indexed_metadata(lines, matrix_start, matrix_end, matrix_terminator)
 
     warnings: list[str] = []
     output_lines, dimension_name, dimension_before, dimension_after, warning = (

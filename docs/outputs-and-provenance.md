@@ -29,6 +29,12 @@ byte-identical to its input. The counts table and JSON report are newly
 generated text with LF line endings. SHA-256 values in the report are calculated
 from the exact bytes written to the corresponding output files.
 
+If the NEXUS input contains a recognized character-indexed declaration or
+partition, a run that would remove sites fails before output creation or
+replacement. This prevents writing a filtered matrix with stale character
+indices; NEXCISION does not reindex NEXUS metadata. See
+[Input formats](input-formats.md#linked-nexus-metadata-and-partitions).
+
 ## Per-region removal counts
 
 NEXCISION writes a tab-separated counts table by default:

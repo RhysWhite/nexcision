@@ -44,6 +44,143 @@ End;
 """
 
 
+class IndexedMetadataSafetyTests(unittest.TestCase):
+    """No stale NEXUS character/partition references after row excision."""
+
+    @staticmethod
+    def after_matrix(command: str, *, matrix: str = TRANSPOSED_NEXUS) -> str:
+        return matrix + "Begin sets;\n    " + command + ";\nEnd;\n"
+
+    @staticmethod
+    def before_matrix(command: str) -> str:
+        return TRANSPOSED_NEXUS.replace(
+            "Begin data;",
+            "Begin sets;\n    " + command + ";\nEnd;\nBegin data;",
+            1,
+        )
+
+    def test_rejects_known_character_indexed_statements(self) -> None:
+        commands = (
+            "CHARSET interesting=1-3",
+            "CHARPARTITION regions=first:1-2, second:3-5",
+            "EXSET * ignored=1-3",
+            "WTSET weights=2:1-3",
+            "TYPESET grouping=ORD:1-3",
+            "ANCSTATES ancestral=0:1-3",
+            "CODONPOSSET * frame=N:1-3",
+            "CODESET somecode=universal:1-3",
+            "ELIMINATE 1-3",
+            "CHARLABELS first second third fourth fifth",
+            "CHARSTATELABELS 1 locus / A T",
+            "STATELABELS 1 A T",
+            "CHARWEIGHTS 1 2 3 4 5",
+        )
+        regions = [Region(1, 180, 180, "middle")]
+        for command in commands:
+            with self.subTest(command=command):
+                nexus = self.after_matrix(command)
+                with self.assertRaisesRegex(NexusFilterError, command.split()[0]):
+                    filter_nexus_text(nexus, regions)
+
+    def test_detects_metadata_before_matrix_and_multiline_mixed_case(self) -> None:
+        nexus = self.before_matrix("cHaRsEt\n        target = 1-3")
+        with self.assertRaisesRegex(NexusFilterError, "CHARSET"):
+            filter_nexus_text(nexus, [Region(1, 180, 180, "site")])
+
+    def test_same_line_post_terminator_command_is_detected(self) -> None:
+        nexus = TRANSPOSED_NEXUS.replace(
+            "    CP013831_500 0011\n    ;\nEnd;",
+            "    CP013831_500 0011; End; BEGIN SETS; CHARSET important=1-5; END;",
+        )
+        with self.assertRaisesRegex(NexusFilterError, "CHARSET"):
+            filter_nexus_text(nexus, [Region(1, 180, 180, "site")])
+
+    def test_cannot_bypass_metadata_guard_by_disabling_dimension_update(self) -> None:
+        nexus = self.after_matrix("CHARSET important=1-5")
+        with self.assertRaisesRegex(NexusFilterError, "CHARSET"):
+            filter_nexus_text(
+                nexus, [Region(1, 180, 180, "site")], update_dimension="none"
+            )
+
+    def test_no_op_with_indexed_metadata_remains_byte_identical(self) -> None:
+        nexus = self.after_matrix("CHARSET important=1-5")
+        filtered, _counts, result = filter_nexus_text(
+            nexus, [Region(1, 999, 999, "no_match")]
+        )
+        self.assertEqual(result.rows_removed, 0)
+        self.assertEqual(filtered, nexus)
+
+    def test_quoted_text_and_nested_comments_do_not_trigger(self) -> None:
+        nexus = (
+            TRANSPOSED_NEXUS
+            + "Begin notes;\n"
+            + " TITLE 'this is not CHARSET wrong=1-5; nor WTSET bogus=2-4';\n"
+            + " [CHARSET fake=1-3; [CHARPARTITION also_fake=1-5;]]\n"
+            + " TITLE 'another ''CHARSET ghost''; still quoted';\n"
+            + "End;\n"
+        )
+        filtered, _counts, result = filter_nexus_text(
+            nexus, [Region(1, 180, 180, "site")]
+        )
+        self.assertEqual(result.rows_removed, 1)
+        self.assertIn("nchar=4", filtered)
+        self.assertIn("TITLE 'this is not CHARSET", filtered)
+
+    def test_taxon_annotations_are_unchanged_for_transposed_matrix(self) -> None:
+        nexus = self.after_matrix("TAXSET group=1-2")
+        filtered, _counts, result = filter_nexus_text(
+            nexus, [Region(1, 180, 180, "site")]
+        )
+        self.assertEqual(result.rows_removed, 1)
+        self.assertIn("TAXSET group=1-2;", filtered)
+
+    def test_nontransposed_taxon_definitions_are_rejected(self) -> None:
+        for statement in (
+            "TAXSET group=1-2",
+            "TAXPARTITION groups=one:1-2, two:3-5",
+            "TAXLABELS A B C D E",
+            "TRANSLATE 1 'taxon_A', 2 'taxon_B'",
+            "TREE tree1=(A,B)",
+            "UTREE tree1=(A,B)",
+        ):
+            with self.subTest(statement=statement):
+                nexus = self.after_matrix(statement, matrix=NEXUS)
+                with self.assertRaisesRegex(NexusFilterError, statement.split()[0]):
+                    filter_nexus_text(
+                        nexus, [Region(1, 180, 180, "site")]
+                    )
+
+    def test_nontransposed_unrelated_content_can_be_preserved(self) -> None:
+        nexus = self.after_matrix("TITLE 'metadata for characters only'", matrix=NEXUS)
+        filtered, _, result = filter_nexus_text(
+            nexus, [Region(1, 180, 180, "site")]
+        )
+        self.assertEqual(result.rows_removed, 1)
+        self.assertIn("TITLE 'metadata for characters only';", filtered)
+
+    def test_rejected_metadata_never_replaces_existing_outputs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            nexus = root / "input.nex"
+            regions = root / "regions.tsv"
+            out = root / "filtered.nex"
+            counts = root / "counts.tsv"
+            report = root / "report.json"
+            nexus.write_text(
+                self.after_matrix("CHARSET old_positions = 1-5"),
+                encoding="utf-8",
+            )
+            regions.write_text("180 180\n", encoding="utf-8")
+            for path in (out, counts, report):
+                path.write_bytes(b"previous successful run\n")
+            with self.assertRaisesRegex(NexusFilterError, "CHARSET"):
+                filter_nexus_file(
+                    nexus, regions, out, counts, report_path=report, force=True
+                )
+            for path in (out, counts, report):
+                self.assertEqual(path.read_bytes(), b"previous successful run\n")
+
+
 class LoadRegionsTests(unittest.TestCase):
     def test_loads_header_comments_names_and_reversed_coordinates(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

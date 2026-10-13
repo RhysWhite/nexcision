@@ -15,6 +15,13 @@
   including mixed-style files, without affecting deterministic output hashes.
 - Add byte-exact file-level regression tests for no-op filtering, row excision,
   mixed line endings, and SHA-256 provenance consistency.
+- Reject row excision when recognized character-indexed NEXUS metadata
+  (including CHARSET, CHARPARTITION, EXSET, WTSET, TYPESET, character labels,
+  or CODONPOSSET) could become stale; likewise guard taxon-indexed structures
+  when filtering non-transposed matrices. Metadata is never silently renumbered.
+- Preserve metadata-bearing files unchanged for a true no-op filter, and add
+  regression tests for declarations before/after MATRIX, quoted/comment text,
+  forced-output safety, and dimension-policy bypass attempts.
 
 ## 0.1.1 — 2026-08-10
 

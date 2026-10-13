@@ -168,6 +168,21 @@ Requests explicit handling of `nchar`.
 
 Disables dimension updating.
 
+## Linked character and taxon definitions
+
+Removing character rows can invalidate existing NEXUS character sets,
+partitions, character-indexed assumptions, codon-position sets, or character
+labels. NEXCISION intentionally **rejects excision** when it finds recognized
+linked character-indexed commands rather than silently carrying forward
+obsolete indices. Non-transposed inputs receive an additional taxon-metadata
+safeguard. Comments and quoted mentions of these commands do not trigger the
+check, and no-op filtering is allowed. This check is independent of the
+`--update-dimension` setting.
+
+See [Input formats](input-formats.md#linked-nexus-metadata-and-partitions)
+for the guarded commands and limitations. Arbitrary NEXUS extensions are not
+validated or automatically rewritten.
+
 ## Existing outputs
 
 NEXCISION does not overwrite existing output files by default.
