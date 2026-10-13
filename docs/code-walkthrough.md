@@ -2,6 +2,14 @@
 
 This document explains the NEXCISION v0.1.1 implementation in plain English. It is intended for readers who want to audit what the program does without needing to be experienced Python programmers.
 
+**Snapshot warning:** This is an archival walkthrough of the **v0.1.1** source
+layout. The line-numbered code excerpts below do **not** describe the later
+unreleased mixed-reference safeguard and comment-aware parser. Refer to the
+current `src/nexcision/core.py`, [input formats](input-formats.md), and
+[filtering documentation](filtering-and-coordinates.md) for the current
+behaviour. A fully regenerated code walkthrough is required before the v1.0.0
+publication release.
+
 The walkthrough follows the actual source files in `src/nexcision/` and the command-line entry point declared in `pyproject.toml`. Line numbers refer to the v0.1.1 source snapshot. Blank lines are omitted from the explanation because they do not change program behaviour.
 
 ## 1. What happens when you type `nexcise`?

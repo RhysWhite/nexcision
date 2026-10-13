@@ -6,6 +6,11 @@
   silently applying coordinate-only region masks to multiple reference axes.
 - Add regression tests for mixed contigs, custom coordinate patterns, and
   failure without partial outputs.
+- Recognize nested and multiline NEXUS bracket comments, keeping semicolons and
+  structural keywords in comments from changing matrix boundaries or dimensions.
+- Preserve comments attached to excluded rows and reject unbalanced NEXUS
+  comments or quoted strings before writing output files.
+- Add regression tests for comment-aware parsing and safe output handling.
 
 ## 0.1.1 — 2026-08-10
 

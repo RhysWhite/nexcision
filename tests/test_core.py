@@ -202,6 +202,113 @@ class FilterTextTests(unittest.TestCase):
                 position_pattern=r"site:(\d+)$",
             )
 
+    def test_semicolon_in_standalone_comment_does_not_terminate_matrix(self) -> None:
+        matrix = TRANSPOSED_NEXUS.replace(
+            "    CP013831_180 1101",
+            "    [note; this is not a MATRIX terminator]\n    CP013831_180 1101",
+        )
+        filtered, _, result = filter_nexus_text(matrix, self.regions)
+        self.assertEqual((result.rows_removed, result.rows_kept), (3, 2))
+        self.assertIn("[note; this is not a MATRIX terminator]", filtered)
+        self.assertIn("Dimensions ntax=4 nchar=2;", filtered)
+
+    def test_comments_spanning_multiple_lines_and_nested_comments(self) -> None:
+        matrix = TRANSPOSED_NEXUS.replace(
+            "    CP013831_180 1101",
+            "    [outer note;\n       [inner MATRIX; END;]\n       still note]\n    CP013831_180 1101",
+        )
+        filtered, _, result = filter_nexus_text(matrix, self.regions)
+        self.assertEqual(result.rows_removed, 3)
+        self.assertIn("[inner MATRIX; END;]", filtered)
+
+    def test_ignored_matrix_command_in_comment(self) -> None:
+        matrix = TRANSPOSED_NEXUS.replace(
+            "Begin data;", "[\nMATRIX\n]\nBegin data;"
+        )
+        filtered, _, result = filter_nexus_text(matrix, self.regions)
+        self.assertEqual(result.rows_removed, 3)
+        self.assertIn("[\nMATRIX\n]", filtered)
+
+    def test_ignored_matrix_command_in_quoted_string(self) -> None:
+        matrix = TRANSPOSED_NEXUS.replace(
+            "Begin data;", "[quoted tokens are not structural]\n'MATRIX'\nBegin data;"
+        )
+        _, _, result = filter_nexus_text(matrix, self.regions)
+        self.assertEqual(result.rows_removed, 3)
+
+    def test_comment_text_does_not_prevent_dimension_update(self) -> None:
+        matrix = TRANSPOSED_NEXUS.replace(
+            "    Dimensions", "    [nchar=99; DIMENSIONS nchar=77]\n    Dimensions"
+        )
+        filtered, _, result = filter_nexus_text(matrix, self.regions)
+        self.assertEqual(result.dimension_updated, "nchar")
+        self.assertEqual(result.warnings, ())
+        self.assertIn("[nchar=99; DIMENSIONS nchar=77]", filtered)
+        self.assertIn("Dimensions ntax=4 nchar=2;", filtered)
+
+    def test_transpose_detection_ignores_comments_and_quoted_text(self) -> None:
+        matrix = NEXUS.replace(
+            '    Format datatype=standard symbols="01" gap=-;',
+            '    [FORMAT transpose=yes;]\n'
+            '    Format datatype=standard symbols="TRANSPOSE=yes;" gap=-;',
+        )
+        filtered, _, result = filter_nexus_text(matrix, self.regions)
+        self.assertEqual(result.dimension_updated, "ntax")
+        self.assertIn("Dimensions ntax=2 nchar=4;", filtered)
+
+    def test_real_transpose_with_inline_comments_is_recognized(self) -> None:
+        matrix = TRANSPOSED_NEXUS.replace(
+            "transpose=yes;", "[note;] transpose = yes;"
+        )
+        filtered, _, result = filter_nexus_text(matrix, self.regions)
+        self.assertEqual(result.dimension_updated, "nchar")
+        self.assertIn("nchar=2;", filtered)
+
+    def test_removed_row_preserves_inline_comment_and_semicolon(self) -> None:
+        matrix = TRANSPOSED_NEXUS.replace(
+            "    CP013831_180 1101",
+            "    [keep; this comment] CP013831_180 1101 [also; keep]",
+        )
+        filtered, _, result = filter_nexus_text(matrix, self.regions)
+        self.assertEqual(result.rows_removed, 3)
+        self.assertNotIn("CP013831_180", filtered)
+        self.assertIn("[keep; this comment]", filtered)
+        self.assertIn("[also; keep]", filtered)
+
+    def test_removed_last_row_preserves_real_terminator_and_comment(self) -> None:
+        matrix = TRANSPOSED_NEXUS.replace(
+            "    CP013831_500 0011\n    ;",
+            "    CP013831_500 0011 [note; not the delimiter]; [after;]",
+        )
+        filtered, _, result = filter_nexus_text(
+            matrix, [Region(1, 500, 500, "last")]
+        )
+        self.assertEqual(result.rows_removed, 1)
+        self.assertNotIn("CP013831_500", filtered)
+        self.assertIn("[note; not the delimiter]; [after;]", filtered)
+        self.assertIn("End;", filtered)
+
+    def test_quoted_semicolon_and_doubled_quote_not_a_terminator(self) -> None:
+        matrix = TRANSPOSED_NEXUS.replace(
+            "    CP013831_100 0101",
+            "    CP013831_100 'a'';b'",
+        )
+        filtered, _, result = filter_nexus_text(matrix, self.regions)
+        self.assertEqual(result.rows_removed, 3)
+        self.assertIn("CP013831_100 'a'';b'", filtered)
+
+    def test_unterminated_nexus_comment_rejected(self) -> None:
+        matrix = TRANSPOSED_NEXUS + "[unclosed comment;\n"
+        with self.assertRaisesRegex(NexusFilterError, "Unterminated NEXUS bracket comment"):
+            filter_nexus_text(matrix, self.regions)
+
+    def test_unmatched_nexus_closing_bracket_rejected(self) -> None:
+        matrix = TRANSPOSED_NEXUS.replace(
+            "    CP013831_180 1101", "    CP013831_180 1101 ]"
+        )
+        with self.assertRaisesRegex(NexusFilterError, "Unmatched NEXUS comment"):
+            filter_nexus_text(matrix, self.regions)
+
     def test_rejects_multiple_matrix_blocks(self) -> None:
         duplicated = NEXUS + NEXUS
         with self.assertRaisesRegex(NexusFilterError, "More than one MATRIX"):
@@ -268,6 +375,19 @@ class FilterFileTests(unittest.TestCase):
                 filter_nexus_file(nexus, regions, output, counts, report_path=report)
             for path in (output, counts, report):
                 self.assertFalse(path.exists(), str(path))
+
+    def test_comment_parse_failure_leaves_no_outputs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            nexus = root / "input.nex"
+            regions = root / "regions.tsv"
+            nexus.write_text(TRANSPOSED_NEXUS + "[unclosed;\n", encoding="utf-8")
+            regions.write_text("170\t260\n", encoding="utf-8")
+            paths = (root / "filtered.nex", root / "counts.tsv", root / "report.json")
+            with self.assertRaisesRegex(NexusFilterError, "Unterminated NEXUS"):
+                filter_nexus_file(nexus, regions, paths[0], paths[1], report_path=paths[2])
+            for path in paths:
+                self.assertFalse(path.exists())
 
     def test_rejects_duplicate_output_paths(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -192,15 +192,101 @@ def _is_excluded(
     return index >= 0 and position <= intervals[index][1]
 
 
-def _is_comment_or_blank(content: str) -> bool:
-    stripped = content.strip()
-    return not stripped or stripped.startswith("[")
+class _NexusScanner:
+    """Recognize nested NEXUS comments and quoted text without changing input.
+
+    ``visible`` masks comments but retains quoted data; ``syntax`` also masks
+    quoted text so keywords and semicolons in either cannot be mistaken for
+    commands. Character offsets are identical to the original line.
+    """
+
+    def __init__(self) -> None:
+        self.comment_depth = 0
+        self.quote: str | None = None
+
+    def scan(self, line: str, line_number: int) -> tuple[str, str, str | None]:
+        # Typical SPANDx matrix rows contain no lexical metacharacters. Keep
+        # their parsing on the original fast path, without a character loop.
+        if (
+            not self.comment_depth
+            and self.quote is None
+            and not any(char in line for char in "[]'\"")
+        ):
+            return line, line, None
+
+        visible = list(line)
+        syntax = list(line)
+        comments: list[str] | None = None
+
+        index = 0
+        while index < len(line):
+            char = line[index]
+            blank = char if char in "\r\n" else " "
+            if self.comment_depth:
+                if comments is None:
+                    comments = [c if c in "\r\n" else " " for c in line]
+                comments[index] = char
+                visible[index] = blank
+                syntax[index] = blank
+                if char == "[":
+                    self.comment_depth += 1
+                elif char == "]":
+                    self.comment_depth -= 1
+            elif self.quote is not None:
+                syntax[index] = blank
+                if char == self.quote:
+                    if index + 1 < len(line) and line[index + 1] == char:
+                        # Two consecutive quote characters represent one
+                        # literal quote, not the end of the quoted string.
+                        index += 1
+                        syntax[index] = " "
+                    else:
+                        self.quote = None
+            elif char == "[":
+                self.comment_depth = 1
+                if comments is None:
+                    comments = [c if c in "\r\n" else " " for c in line]
+                comments[index] = char
+                visible[index] = blank
+                syntax[index] = blank
+            elif char == "]":
+                raise NexusFilterError(
+                    f"Unmatched NEXUS comment closing bracket on line {line_number}."
+                )
+            elif char in "'\"":
+                self.quote = char
+                syntax[index] = blank
+            index += 1
+
+        return (
+            "".join(visible),
+            "".join(syntax),
+            None if comments is None else "".join(comments),
+        )
+
+    def finish(self) -> None:
+        if self.comment_depth:
+            raise NexusFilterError("Unterminated NEXUS bracket comment.")
+        if self.quote is not None:
+            raise NexusFilterError("Unterminated NEXUS quoted string.")
 
 
-def _matrix_is_transposed(prefix: str) -> bool:
-    """Return whether the last FORMAT command declares TRANSPOSE."""
+def _nexus_syntax(text: str) -> str:
+    """Return text with comments and quoted strings masked in-place."""
 
-    format_commands = re.findall(r"(?is)\bformat\b(.*?);", prefix)
+    scanner = _NexusScanner()
+    masked = [
+        scanner.scan(line, index)[1]
+        for index, line in enumerate(text.splitlines(keepends=True), start=1)
+    ]
+    scanner.finish()
+    return "".join(masked)
+
+
+def _matrix_is_transposed(syntax_prefix: str) -> bool:
+    """Return whether the last relevant FORMAT command declares TRANSPOSE."""
+
+    format_commands = re.findall(r"(?is)\bformat\b(.*?);", syntax_prefix)
     for command in reversed(format_commands):
         if not re.search(r"(?i)\btranspose\b", command):
             continue
@@ -231,12 +317,15 @@ def _update_dimension(
     policy: DimensionPolicy,
 ) -> tuple[list[str], str | None, int | None, int | None, str | None]:
     prefix = "".join(lines[:matrix_start_index])
+    # Comment text such as [nchar=99] must never count as a declaration.
+    # Keeping original offsets permits changing only the true numeric value.
+    syntax_prefix = _nexus_syntax(prefix)
     suffix = "".join(lines[matrix_start_index:])
-    field = _resolve_dimension(policy, prefix)
+    field = _resolve_dimension(policy, syntax_prefix)
     if field is None:
         return lines, None, None, None, None
 
-    matches = list(re.finditer(rf"(?i)\b{field}\s*=\s*(\d+)", prefix))
+    matches = list(re.finditer(rf"(?i)\b{field}\s*=\s*(\d+)", syntax_prefix))
     if not matches:
         return (
             lines,
@@ -267,12 +356,8 @@ def _update_dimension(
             "automatic dimension selection if required.",
         )
 
-    replacement = re.sub(
-        rf"(?i)(\b{field}\s*=\s*)\d+",
-        lambda found: f"{found.group(1)}{kept_rows}",
-        prefix,
-        count=1,
-    )
+    value_span = matches[0].span(1)
+    replacement = prefix[:value_span[0]] + str(kept_rows) + prefix[value_span[1]:]
     updated = (replacement + suffix).splitlines(keepends=True)
     return updated, field, declared, kept_rows, None
 
@@ -449,9 +534,17 @@ def filter_nexus_text(
     starts, merged_regions = _merge_regions(regions)
     lines = text.splitlines(keepends=True)
 
-    matrix_indices = [
-        index for index, line in enumerate(lines) if line.strip().lower() == "matrix"
-    ]
+    # Find real standalone MATRIX commands, excluding identical words within
+    # NEXUS comments and quoted strings. Scan once to catch malformed quotes
+    # and comments anywhere in the input, including after the MATRIX block.
+    locator = _NexusScanner()
+    matrix_indices: list[int] = []
+    for index, line in enumerate(lines):
+        _visible, syntax, _comments = locator.scan(line, index + 1)
+        if syntax.strip().lower() == "matrix":
+            matrix_indices.append(index)
+    locator.finish()
+
     if not matrix_indices:
         raise NexusFilterError("No standalone MATRIX line was found in the NEXUS file.")
     if len(matrix_indices) > 1:
@@ -470,6 +563,7 @@ def filter_nexus_text(
     unparsed_rows = 0
     removed_positions: list[int] = []
     reference_label: str | None = None
+    scanner = _NexusScanner()
 
     for index in range(matrix_start + 1, len(lines)):
         line = lines[index]
@@ -477,17 +571,18 @@ def filter_nexus_text(
             output_lines.append(line)
             continue
 
-        before, separator, after = line.partition(";")
-        content = before if separator else line
+        visible, syntax, comments = scanner.scan(line, index + 1)
+        semicolon = syntax.find(";")
+        content = visible[:semicolon] if semicolon >= 0 else visible
 
-        if separator and content.strip().lower() in {"end", "endblock"}:
+        if semicolon >= 0 and syntax[:semicolon].strip().lower() in {"end", "endblock"}:
             raise NexusFilterError(
                 "The MATRIX block is not terminated before the enclosing block ends."
             )
 
-        if _is_comment_or_blank(content):
+        if not content.strip():
             output_lines.append(line)
-            if separator:
+            if semicolon >= 0:
                 in_matrix = False
                 terminated = True
             continue
@@ -501,7 +596,7 @@ def filter_nexus_text(
                     f"{content.strip()!r}. Use --allow-unparsed to preserve it."
                 )
             output_lines.append(line)
-            if separator:
+            if semicolon >= 0:
                 in_matrix = False
                 terminated = True
             continue
@@ -521,14 +616,21 @@ def filter_nexus_text(
         if _is_excluded(position, starts, merged_regions):
             rows_removed += 1
             removed_positions.append(position)
-            if separator:
-                newline = "\n" if line.endswith("\n") else ""
-                output_lines.append(f";{after.rstrip(chr(10))}{newline}")
+            # Comments attached to an excised row remain in their original
+            # order. Preserve the actual MATRIX terminator and everything
+            # following it, not a semicolon inside a bracket comment.
+            if semicolon >= 0:
+                output_lines.append(
+                    (comments[:semicolon] if comments is not None else "")
+                    + line[semicolon:]
+                )
+            elif comments is not None:
+                output_lines.append(comments)
         else:
             parsed_rows_kept += 1
             output_lines.append(line)
 
-        if separator:
+        if semicolon >= 0:
             in_matrix = False
             terminated = True
 

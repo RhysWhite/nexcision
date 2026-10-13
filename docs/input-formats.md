@@ -64,6 +64,21 @@ If unmatched matrix rows are intentionally expected and should remain unchanged,
 
 This option is an explicit opt-in. It preserves unmatched non-comment rows rather than assigning them a coordinate.
 
+## NEXUS bracket comments and quoted text
+
+NEXCISION recognises NEXUS square-bracket comments, including inline,
+multiline, and nested comments. A semicolon or `MATRIX`, `FORMAT`, `DIMENSIONS`,
+`ntax`, or `nchar` text **inside a comment** is not interpreted as NEXUS syntax.
+Quoted strings are likewise excluded from structural-command and semicolon
+recognition. Comments on retained matrix rows are preserved unchanged;
+comments attached to removed rows are also retained, without their removed
+matrix states. Unbalanced brackets or unterminated quoted strings are rejected
+before any output is written.
+
+This is limited, comment-aware handling for the supported **one-matrix,
+coordinate-labelled-row** model, not validation or rewriting of arbitrary
+NEXUS commands and linked character partitions.
+
 ## Regions file
 
 The regions file is whitespace-delimited.

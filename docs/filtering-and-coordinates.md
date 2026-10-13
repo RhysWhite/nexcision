@@ -51,6 +51,15 @@ The expression must contain exactly one capture group representing the coordinat
 
 See [Input formats](input-formats.md) for the complete input requirements.
 
+## Comment-aware parsing
+
+NEXUS bracket comments, including nested and multiline comments, are excluded
+from matrix-command, matrix-terminator and dimension-declaration detection.
+A semicolon inside a comment is not the MATRIX terminator. NEXCISION retains
+bracket comments even when their associated coordinate-labelled row is removed.
+Unterminated comments and quoted strings cause a controlled error before output
+files are written. This does not make NEXCISION a general NEXUS parser.
+
 ## Reference-coordinate axis safeguard
 
 The regions file defines genomic positions, **not reference-sequence identifiers**.
