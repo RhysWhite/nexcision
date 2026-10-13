@@ -79,6 +79,15 @@ This is limited, comment-aware handling for the supported **one-matrix,
 coordinate-labelled-row** model, not validation or rewriting of arbitrary
 NEXUS commands and linked character partitions.
 
+## Line endings and retained text
+
+NEXCISION reads valid UTF-8 NEXUS files without converting newline sequences.
+It preserves existing LF (`\n`), CRLF (`\r\n`), and CR (`\r`) endings,
+including files containing a mixture of these sequences. Unchanged matrix rows,
+comments, and text outside the MATRIX block therefore retain their original
+bytes. Removed rows and any necessary numeric dimension update are intentional
+changes to the output; generated counts and JSON report files use LF endings.
+
 ## Regions file
 
 The regions file is whitespace-delimited.

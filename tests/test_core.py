@@ -358,6 +358,110 @@ class FilterFileTests(unittest.TestCase):
             with self.assertRaisesRegex(NexusFilterError, "already exists"):
                 filter_nexus_file(nexus, regions, output, counts)
 
+    def test_crlf_no_match_preserves_every_input_byte_and_report_hashes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            nexus = root / "input.nex"
+            regions = root / "regions.tsv"
+            output = root / "filtered.nex"
+            counts = root / "counts.tsv"
+            report = root / "report.json"
+            original = TRANSPOSED_NEXUS.replace("\n", "\r\n").encode("utf-8")
+            nexus.write_bytes(original)
+            regions.write_text("999\t999\n", encoding="utf-8")
+
+            result = filter_nexus_file(
+                nexus, regions, output, counts, report_path=report
+            )
+            self.assertEqual((result.rows_removed, result.rows_kept), (0, 5))
+            self.assertEqual(output.read_bytes(), original)
+            payload = json.loads(report.read_text(encoding="utf-8"))
+            expected_digest = hashlib.sha256(original).hexdigest()
+            self.assertEqual(payload["inputs"]["nexus"]["sha256"], expected_digest)
+            self.assertEqual(
+                payload["outputs"]["filtered_nexus"]["sha256"], expected_digest
+            )
+            self.assertEqual(
+                payload["outputs"]["region_counts"]["sha256"],
+                hashlib.sha256(counts.read_bytes()).hexdigest(),
+            )
+
+    def test_crlf_with_removed_rows_preserves_retained_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            nexus = root / "input.nex"
+            regions = root / "regions.tsv"
+            output = root / "filtered.nex"
+            counts = root / "counts.tsv"
+            report = root / "report.json"
+            original = TRANSPOSED_NEXUS.replace("\n", "\r\n")
+            nexus.write_bytes(original.encode("utf-8"))
+            regions.write_text("180 250\n", encoding="utf-8")
+            expected = (
+                original.replace("nchar=5", "nchar=3")
+                .replace("    CP013831_180 1101\r\n", "")
+                .replace("    CP013831_250 0001\r\n", "")
+            )
+
+            result = filter_nexus_file(
+                nexus, regions, output, counts, report_path=report
+            )
+            self.assertEqual((result.rows_removed, result.rows_kept), (2, 3))
+            self.assertEqual(output.read_bytes(), expected.encode("utf-8"))
+            payload = json.loads(report.read_text(encoding="utf-8"))
+            self.assertEqual(
+                payload["outputs"]["filtered_nexus"]["sha256"],
+                hashlib.sha256(output.read_bytes()).hexdigest(),
+            )
+
+    def test_mixed_line_endings_and_comments_remain_unchanged(self) -> None:
+        mixed = (
+            '#NEXUS\r\n'
+            'Begin data;\n'
+            '    Dimensions ntax=4 nchar=3;\r\n'
+            '    Format datatype=standard symbols="01" transpose=yes;\n'
+            '    Matrix\r\n'
+            '    CP013831_100 0101 [keep; comment]\n'
+            '    CP013831_180 1101\r\n'
+            '    CP013831_250 0001;\n'
+            'End;\r\n'
+        )
+        expected = (
+            mixed.replace("nchar=3", "nchar=2")
+            .replace("    CP013831_180 1101\r\n", "")
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            nexus = root / "input.nex"
+            regions = root / "regions.tsv"
+            output = root / "filtered.nex"
+            counts = root / "counts.tsv"
+            nexus.write_bytes(mixed.encode("utf-8"))
+            regions.write_text("180\t180\n", encoding="utf-8")
+
+            result = filter_nexus_file(nexus, regions, output, counts)
+            self.assertEqual((result.rows_removed, result.rows_kept), (1, 2))
+            self.assertEqual(output.read_bytes(), expected.encode("utf-8"))
+
+    def test_lone_cr_line_endings_are_not_normalized(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            nexus = root / "input.nex"
+            regions = root / "regions.tsv"
+            output = root / "filtered.nex"
+            counts = root / "counts.tsv"
+            original = TRANSPOSED_NEXUS.replace("\n", "\r")
+            nexus.write_bytes(original.encode("utf-8"))
+            regions.write_text("180\t180\n", encoding="utf-8")
+            expected = (
+                original.replace("nchar=5", "nchar=4")
+                .replace("    CP013831_180 1101\r", "")
+            )
+
+            result = filter_nexus_file(nexus, regions, output, counts)
+            self.assertEqual(result.rows_removed, 1)
+            self.assertEqual(output.read_bytes(), expected.encode("utf-8"))
+
     def test_mixed_reference_labels_fail_without_writing_any_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

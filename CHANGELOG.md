@@ -11,6 +11,10 @@
 - Preserve comments attached to excluded rows and reject unbalanced NEXUS
   comments or quoted strings before writing output files.
 - Add regression tests for comment-aware parsing and safe output handling.
+- Preserve original NEXUS LF, CRLF, or CR line endings during file input,
+  including mixed-style files, without affecting deterministic output hashes.
+- Add byte-exact file-level regression tests for no-op filtering, row excision,
+  mixed line endings, and SHA-256 provenance consistency.
 
 ## 0.1.1 — 2026-08-10
 

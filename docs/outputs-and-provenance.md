@@ -22,6 +22,13 @@ Rows retained by the filtering operation are preserved rather than reconstructed
 
 NEXCISION also applies the selected dimension-handling policy after filtering. See [Filtering and coordinates](filtering-and-coordinates.md).
 
+For UTF-8 inputs, NEXCISION preserves the existing LF, CRLF, or CR line endings
+of retained text, even when different ending styles occur in the same file.
+If no rows are removed and no dimension value changes, the NEXUS output is
+byte-identical to its input. The counts table and JSON report are newly
+generated text with LF line endings. SHA-256 values in the report are calculated
+from the exact bytes written to the corresponding output files.
+
 ## Per-region removal counts
 
 NEXCISION writes a tab-separated counts table by default:

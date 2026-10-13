@@ -750,7 +750,11 @@ def filter_nexus_file(
         raise NexusFilterError("Output paths must not overwrite an input file.")
 
     try:
-        text = nexus.read_text(encoding="utf-8")
+        # Path.read_text() uses universal-newline translation and silently
+        # converts CRLF/CR to LF. Preserve the original UTF-8 line endings so
+        # unchanged NEXUS rows and surrounding content stay byte-identical.
+        with nexus.open("r", encoding="utf-8", newline="") as handle:
+            text = handle.read()
     except (OSError, UnicodeError) as exc:
         raise NexusFilterError(f"Cannot open NEXUS file '{nexus}': {exc}") from exc
 
