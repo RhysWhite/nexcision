@@ -125,8 +125,15 @@ def compile_position_pattern(pattern: str = DEFAULT_POSITION_PATTERN) -> Pattern
     return compiled
 
 
-def extract_position(line: str, pattern: Pattern[str]) -> int | None:
-    """Extract a genomic coordinate from the first matrix token."""
+def _parse_coordinate_label(
+    line: str, pattern: Pattern[str]
+) -> tuple[int, str] | None:
+    """Return the coordinate and non-coordinate part of a matrix row label.
+
+    The latter is used to detect incompatible reference identifiers. It is
+    deliberately derived from the configured capture group, so custom
+    coordinate expressions follow the same rule as the default expression.
+    """
 
     stripped = line.strip()
     if not stripped:
@@ -148,7 +155,15 @@ def extract_position(line: str, pattern: Pattern[str]) -> int | None:
         raise NexusFilterError(
             f"Position pattern captured a coordinate below 1 from token '{token}'."
         )
-    return position
+
+    reference_label = token[:match.start(1)] + token[match.end(1):]
+    return position, reference_label
+
+
+def extract_position(line: str, pattern: Pattern[str]) -> int | None:
+    """Extract a genomic coordinate from the first matrix token."""
+    parsed = _parse_coordinate_label(line, pattern)
+    return None if parsed is None else parsed[0]
 
 
 def _merge_regions(
@@ -454,6 +469,7 @@ def filter_nexus_text(
     parsed_rows_kept = 0
     unparsed_rows = 0
     removed_positions: list[int] = []
+    reference_label: str | None = None
 
     for index in range(matrix_start + 1, len(lines)):
         line = lines[index]
@@ -476,8 +492,8 @@ def filter_nexus_text(
                 terminated = True
             continue
 
-        position = extract_position(content, pattern)
-        if position is None:
+        parsed = _parse_coordinate_label(content, pattern)
+        if parsed is None:
             unparsed_rows += 1
             if not allow_unparsed:
                 raise NexusFilterError(
@@ -489,6 +505,17 @@ def filter_nexus_text(
                 in_matrix = False
                 terminated = True
             continue
+
+        position, row_reference_label = parsed
+        if reference_label is None:
+            reference_label = row_reference_label
+        elif row_reference_label != reference_label:
+            raise NexusFilterError(
+                f"Matrix line {index + 1} uses reference label "
+                f"{row_reference_label!r}, but an earlier row uses "
+                f"{reference_label!r}. Region intervals specify coordinates "
+                "only; mixed reference coordinate axes cannot be filtered safely."
+            )
 
         parsed_rows += 1
         if _is_excluded(position, starts, merged_regions):

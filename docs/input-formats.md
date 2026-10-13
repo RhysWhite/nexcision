@@ -121,3 +121,5 @@ Before filtering, confirm that:
 - genomic sites are represented as matrix rows;
 - the first token of each relevant row contains a coordinate that can be parsed by the selected regular expression;
 - the regions use the same coordinate system as the matrix identifiers.
+- all parsed site labels identify a single reference coordinate axis (mixed
+  contig/chromosome/plasmid prefixes are rejected before writing outputs).

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased (post-v0.1.1; pending consolidated revision)
+
+- Reject MATRIX rows with conflicting reference-identifier components to avoid
+  silently applying coordinate-only region masks to multiple reference axes.
+- Add regression tests for mixed contigs, custom coordinate patterns, and
+  failure without partial outputs.
+
 ## 0.1.1 — 2026-08-10
 
 - Synchronizes the public source with the implementation used in the formal NEXCISION validation.

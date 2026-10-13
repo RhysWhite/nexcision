@@ -51,6 +51,25 @@ The expression must contain exactly one capture group representing the coordinat
 
 See [Input formats](input-formats.md) for the complete input requirements.
 
+## Reference-coordinate axis safeguard
+
+The regions file defines genomic positions, **not reference-sequence identifiers**.
+Consequently, all coordinate-labelled MATRIX row identifiers must use one shared
+reference-coordinate axis. NEXCISION checks that the non-coordinate part of
+each parsed row label is identical across the matrix. With the default pattern,
+`CP013831_100` and `CP013831_200` are compatible, whereas `chrA_100` and
+`chrB_100` cause a controlled error **before any output is written**.
+
+A user-specified coordinate regex still defines the captured position; the
+remaining row-label characters are used for the reference-axis consistency
+check. A coordinate-only row label contains no reference identifier, so
+NEXCISION cannot independently establish its biological reference origin.
+
+For matrices representing multiple contigs, chromosomes, or plasmids with
+independent coordinate systems, **split the matrix by reference coordinate
+axis and filter each against the appropriate regions**. NEXCISION does not
+accept contig-specific region files or infer mappings between reference axes.
+
 ## Unparsed rows
 
 A non-comment matrix row that cannot be parsed is rejected by default.
@@ -164,4 +183,6 @@ Its filtering decision is determined by:
 - the supplied inclusive intervals;
 - the explicit command-line settings.
 
-Users remain responsible for ensuring that the regions and matrix row identifiers use the same reference coordinate system.
+NEXCISION rejects conflicting reference prefixes, but cannot determine whether the
+numeric intervals and the single observed reference actually correspond to
+the same biological reference sequence. Users must verify this relationship.

@@ -175,6 +175,33 @@ class FilterTextTests(unittest.TestCase):
         self.assertNotIn("site:180", filtered)
         self.assertEqual(result.rows_removed, 1)
 
+    def test_rejects_multiple_reference_labels_even_if_positions_differ(self) -> None:
+        mixed = TRANSPOSED_NEXUS.replace("CP013831_500", "OTHER_REF_500")
+        with self.assertRaisesRegex(
+            NexusFilterError, "mixed reference coordinate axes cannot be filtered safely"
+        ):
+            filter_nexus_text(mixed, self.regions)
+
+    def test_rejects_different_contigs_at_same_position(self) -> None:
+        mixed = TRANSPOSED_NEXUS.replace("CP013831_180", "plasmid_100")
+        with self.assertRaisesRegex(NexusFilterError, "Matrix line 7"):
+            filter_nexus_text(mixed, [Region(1, 100, 100, "same-position")])
+
+    def test_rejects_mixed_refs_even_with_allow_unparsed(self) -> None:
+        mixed = TRANSPOSED_NEXUS.replace("CP013831_500", "OTHER_REF_500")
+        with self.assertRaisesRegex(NexusFilterError, "mixed reference coordinate axes"):
+            filter_nexus_text(mixed, self.regions, allow_unparsed=True)
+
+    def test_rejects_mixed_refs_with_custom_coordinate_regex(self) -> None:
+        mixed = TRANSPOSED_NEXUS.replace("CP013831_", "chrA:site:")
+        mixed = mixed.replace("chrA:site:500", "chrB:site:500")
+        with self.assertRaisesRegex(NexusFilterError, "mixed reference coordinate axes"):
+            filter_nexus_text(
+                mixed,
+                self.regions,
+                position_pattern=r"site:(\d+)$",
+            )
+
     def test_rejects_multiple_matrix_blocks(self) -> None:
         duplicated = NEXUS + NEXUS
         with self.assertRaisesRegex(NexusFilterError, "More than one MATRIX"):
@@ -223,6 +250,24 @@ class FilterFileTests(unittest.TestCase):
 
             with self.assertRaisesRegex(NexusFilterError, "already exists"):
                 filter_nexus_file(nexus, regions, output, counts)
+
+    def test_mixed_reference_labels_fail_without_writing_any_outputs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            nexus = root / "input.nex"
+            regions = root / "regions.tsv"
+            output = root / "filtered.nex"
+            counts = root / "counts.tsv"
+            report = root / "report.json"
+            nexus.write_text(
+                TRANSPOSED_NEXUS.replace("CP013831_500", "plasmid_500"),
+                encoding="utf-8",
+            )
+            regions.write_text("500\t500\n", encoding="utf-8")
+            with self.assertRaisesRegex(NexusFilterError, "mixed reference coordinate axes"):
+                filter_nexus_file(nexus, regions, output, counts, report_path=report)
+            for path in (output, counts, report):
+                self.assertFalse(path.exists(), str(path))
 
     def test_rejects_duplicate_output_paths(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
