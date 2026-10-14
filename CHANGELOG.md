@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (post-v0.1.1; pending consolidated revision)
+## 0.2.0 — 2026-10-14
 
 - Reject MATRIX rows with conflicting reference-identifier components to avoid
   silently applying coordinate-only region masks to multiple reference axes.

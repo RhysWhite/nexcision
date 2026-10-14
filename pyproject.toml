@@ -1,14 +1,15 @@
 [build-system]
-requires = ["setuptools>=68,<82"]
+requires = ["setuptools>=77,<82"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "nexcision"
-version = "0.1.1"
+version = "0.2.0"
 description = "Precise region-based excision of coordinate-labelled rows from NEXUS matrices."
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
   {name = "Rhys White"}
 ]
@@ -23,7 +24,6 @@ keywords = [
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
-  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",

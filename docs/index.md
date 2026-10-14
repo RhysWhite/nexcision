@@ -23,7 +23,7 @@ conda install -c conda-forge -c bioconda nexcision
 ### Stable tagged release
 
 ```bash
-python -m pip install git+https://github.com/RhysWhite/nexcision.git@v0.1.1
+python -m pip install git+https://github.com/RhysWhite/nexcision.git@v0.2.0
 ```
 
 See [Installation](installation.md) for all installation options.
@@ -42,7 +42,7 @@ Coordinates in the regions file are 1-based and inclusive. Existing outputs are 
 ## Start here
 
 - [Workflow integration](workflow-integration.md): provenance reports, checksums, validation policies, and a Snakemake example.
-- [Code walkthrough](code-walkthrough.md): detailed explanation of the command-line interface and implementation.
+- [Code walkthrough](code-walkthrough.md): archived explanation of the v0.1.1 implementation.
 - [GitHub repository](https://github.com/RhysWhite/nexcision): installation, examples, source code, issues, and release information.
 - [Benchmarking and validation repository](https://github.com/RhysWhite/nexcision-benchmarking): formal correctness testing, adversarial validation, and scalability benchmarking.
 

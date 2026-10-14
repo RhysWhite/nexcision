@@ -82,7 +82,7 @@ conda install -c conda-forge -c bioconda nexcision
 ### Install the stable tagged release from GitHub
 
 ```bash
-python -m pip install git+https://github.com/RhysWhite/nexcision.git@v0.1.1
+python -m pip install git+https://github.com/RhysWhite/nexcision.git@v0.2.0
 ```
 
 Alternatively, clone the tagged release and install it locally:
@@ -90,7 +90,7 @@ Alternatively, clone the tagged release and install it locally:
 ```bash
 git clone https://github.com/RhysWhite/nexcision.git
 cd nexcision
-git checkout v0.1.1
+git checkout v0.2.0
 python -m pip install .
 ```
 

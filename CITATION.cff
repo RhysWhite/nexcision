@@ -5,10 +5,10 @@ type: software
 authors:
   - family-names: "White"
     given-names: "Rhys"
-version: 0.1.1
-date-released: 2026-08-10
+version: 0.2.0
+date-released: 2026-10-14
 repository-code: "https://github.com/RhysWhite/nexcision"
-doi: "10.5281/zenodo.21936049"
+doi: "10.5281/zenodo.21936048"
 license: MIT
 abstract: >-
   Precise region-based excision of coordinate-labelled rows from NEXUS

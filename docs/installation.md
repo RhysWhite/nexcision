@@ -13,7 +13,7 @@ python -m pip install nexcision
 To install the current release explicitly by version:
 
 ```bash
-python -m pip install nexcision==0.1.1
+python -m pip install nexcision==0.2.0
 ```
 
 Confirm the installed version with:
@@ -38,13 +38,13 @@ nexcise --version
 
 ## Install the stable tagged release from GitHub
 
-The current stable software release is NEXCISION v0.1.1.
+The current stable software release is NEXCISION v0.2.0.
 
 Install that exact release directly from GitHub:
 
 ```bash
 python -m pip install \
-  git+https://github.com/RhysWhite/nexcision.git@v0.1.1
+  git+https://github.com/RhysWhite/nexcision.git@v0.2.0
 ```
 
 Or clone the repository and install the tagged release locally:
@@ -52,7 +52,7 @@ Or clone the repository and install the tagged release locally:
 ```bash
 git clone https://github.com/RhysWhite/nexcision.git
 cd nexcision
-git checkout v0.1.1
+git checkout v0.2.0
 python -m pip install .
 ```
 
@@ -65,7 +65,7 @@ nexcise --version
 Expected output:
 
 ```text
-NEXCISION 0.1.1
+NEXCISION 0.2.0
 ```
 
 ## Install the current development branch
