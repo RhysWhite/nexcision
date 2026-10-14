@@ -181,6 +181,75 @@ class IndexedMetadataSafetyTests(unittest.TestCase):
                 self.assertEqual(path.read_bytes(), b"previous successful run\n")
 
 
+class AuxiliaryNexusBlockTests(unittest.TestCase):
+    """Only the character matrix is filtered; other NEXUS blocks are copied."""
+
+    TREES = "BEGIN TREES;\n TREE t1 = (Iso1,Iso2);\nEND;\n"
+    DISTANCES = (
+        "BEGIN DISTANCES;\n"
+        " DIMENSIONS NTAX=2;\n"
+        " FORMAT TRIANGLE=LOWER DIAGONAL LABELS;\n"
+        " MATRIX\n"
+        " Iso1 0\n"
+        " Iso2 0.1 0\n"
+        " ;\n"
+        "END;\n"
+    )
+    MATRIX = (
+        "#NEXUS\n"
+        "BEGIN TAXA;\n DIMENSIONS NTAX=2;\n"
+        " TAXLABELS Iso1 Iso2;\nEND;\n"
+        "BEGIN CHARACTERS;\n DIMENSIONS NCHAR=3;\n"
+        " FORMAT DATATYPE=DNA TRANSPOSE=YES;\n"
+        " MATRIX\n CP013831_100 AA\n CP013831_200 CT\n"
+        " CP013831_300 GC\n ;\nEND;\n"
+    )
+
+    @staticmethod
+    def excise(source: str) -> str:
+        output, _counts, report = filter_nexus_text(
+            source, [Region(1, 200, 200, "test")]
+        )
+        assert report.rows_removed == 1
+        assert report.dimension_before == 3
+        assert report.dimension_after == 2
+        assert "CP013831_200" not in output
+        return output
+
+    def test_trees_block_is_preserved_byte_exact(self) -> None:
+        out = self.excise(self.MATRIX + self.TREES)
+        self.assertTrue(out.endswith(self.TREES))
+
+    def test_distances_matrix_after_character_matrix_is_unchanged(self) -> None:
+        out = self.excise(self.MATRIX + self.DISTANCES)
+        self.assertTrue(out.endswith(self.DISTANCES))
+
+    def test_distances_and_trees_after_character_matrix_are_unchanged(self) -> None:
+        suffix = self.TREES + self.DISTANCES
+        out = self.excise(self.MATRIX + suffix)
+        self.assertTrue(out.endswith(suffix))
+
+    def test_distances_matrix_before_character_matrix_is_unchanged(self) -> None:
+        prefix = self.MATRIX.split("BEGIN CHARACTERS;", 1)[0]
+        data = "BEGIN CHARACTERS;" + self.MATRIX.split("BEGIN CHARACTERS;", 1)[1]
+        out = self.excise(prefix + self.DISTANCES + data)
+        self.assertIn(self.DISTANCES, out)
+
+    def test_second_character_matrix_is_still_rejected(self) -> None:
+        with self.assertRaisesRegex(NexusFilterError, "More than one MATRIX"):
+            filter_nexus_text(
+                self.MATRIX + "BEGIN CHARACTERS;\n DIMENSIONS NCHAR=3;\n MATRIX\n CP013831_100 AA\n ;\nEND;\n",
+                [Region(1, 200, 200, "test")],
+            )
+
+    def test_character_indexed_metadata_still_fails_closed(self) -> None:
+        with self.assertRaisesRegex(NexusFilterError, "CHARSET"):
+            filter_nexus_text(
+                self.MATRIX + self.DISTANCES + "BEGIN SETS;\n CHARSET x=1-3;\nEND;\n",
+                [Region(1, 200, 200, "test")],
+            )
+
+
 class LoadRegionsTests(unittest.TestCase):
     def test_loads_header_comments_names_and_reversed_coordinates(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

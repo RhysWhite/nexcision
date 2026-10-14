@@ -619,9 +619,19 @@ def filter_nexus_text(
     # and comments anywhere in the input, including after the MATRIX block.
     locator = _NexusScanner()
     matrix_indices: list[int] = []
+    active_block: str | None = None
+    # MATRIX is also a legitimate command in non-character NEXUS blocks,
+    # notably DISTANCES. Only DATA/CHARACTERS matrices are site matrices.
+    block_boundary = re.compile(
+        r"(?i)\bbegin\s+([A-Za-z][A-Za-z0-9_-]*)\s*;|\bend(?:block)?\s*;"
+    )
     for index, line in enumerate(lines):
         _visible, syntax, _comments = locator.scan(line, index + 1)
-        if syntax.strip().lower() == "matrix":
+        for boundary in block_boundary.finditer(syntax):
+            active_block = boundary.group(1).lower() if boundary.group(1) else None
+        if syntax.strip().lower() == "matrix" and active_block in {
+            None, "data", "characters"
+        }:
             matrix_indices.append(index)
     locator.finish()
 

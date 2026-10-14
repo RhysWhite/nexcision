@@ -23,6 +23,11 @@
   regression tests for declarations before/after MATRIX, quoted/comment text,
   forced-output safety, and dimension-policy bypass attempts.
 
+- Distinguish character `MATRIX` commands in `DATA`/`CHARACTERS` blocks
+  from independent matrices in `DISTANCES` blocks. Retain unrelated `TREES`
+  and `DISTANCES` content unchanged; add regression tests for both block orders,
+  multiple genuine character matrices, and character-indexed safety guards.
+
 ## 0.1.1 — 2026-08-10
 
 - Synchronizes the public source with the implementation used in the formal NEXCISION validation.

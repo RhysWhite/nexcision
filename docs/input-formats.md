@@ -79,6 +79,21 @@ This is limited, comment-aware handling for the supported **one-matrix,
 coordinate-labelled-row** model, not validation or rewriting of arbitrary
 NEXUS commands and linked character partitions.
 
+## Other NEXUS blocks
+
+When the target character matrix is in a `DATA` or `CHARACTERS` block,
+NEXCISION distinguishes its `MATRIX` command from the separate `MATRIX`
+command permitted in a `DISTANCES` block. For supported transposed site
+matrices, independently defined `TREES` and `DISTANCES` blocks are retained
+byte-for-byte unchanged: excision removes character rows, not taxa. NEXCISION
+does not recompute tree topologies, branch lengths, or taxon distances.
+
+This preservation rule does not override the linked-metadata safeguard below:
+recognized character-indexed statements that could become invalid after
+excision cause a controlled error. NEXCISION is not a general NEXUS validator;
+users remain responsible for assessing whether unrecognized/custom blocks
+contain dependencies on the removed characters.
+
 ## Linked NEXUS metadata and partitions
 
 NEXCISION changes **matrix row numbering** when one or more sites are
@@ -167,7 +182,7 @@ A matrix row overlapping more than one region is removed only once from the NEXU
 
 ## Scope
 
-NEXCISION deliberately supports one standalone `MATRIX` block per input file and is not intended to be a general-purpose NEXUS parser.
+NEXCISION supports one target character `MATRIX` in a `DATA` or `CHARACTERS` block; a separate `DISTANCES` block may contain its own matrix without being treated as a second target. NEXCISION is not intended to be a general-purpose NEXUS parser.
 
 Before filtering, confirm that:
 

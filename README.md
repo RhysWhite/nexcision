@@ -117,6 +117,16 @@ Existing outputs are not overwritten unless `--force` is supplied.
 
 NEXCISION reads the genomic coordinate from the first token of each matrix row, compares it against the supplied intervals, and removes matching rows. Rows outside those intervals are retained unchanged.
 
+## Other NEXUS blocks
+
+For supported transposed site matrices, NEXCISION filters only the character
+`MATRIX` in the `DATA` or `CHARACTERS` block. Independent `TREES` and
+`DISTANCES` blocks, including a `DISTANCES` block with its own `MATRIX`
+command, are left unchanged: their taxa are not removed and their values are
+not recalculated. Input files with recognized character-indexed metadata
+that would become inconsistent after site excision are rejected instead of
+silently rewritten. See [Input formats](docs/input-formats.md) for details.
+
 ## Input files
 
 ### NEXUS matrix
