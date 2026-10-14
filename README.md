@@ -34,7 +34,7 @@
   <a href="https://bio.tools/nexcision">
     <img src="https://img.shields.io/badge/bio.tools-nexcision-005a9c" alt="bio.tools">
   </a>
-  <a href="https://doi.org/10.5281/zenodo.21936049">
+  <a href="https://doi.org/10.5281/zenodo.21936048">
     <img src="https://zenodo.org/badge/1307110341.svg" alt="DOI">
   </a>
   <a href="LICENSE">
@@ -250,6 +250,8 @@ Please cite NEXCISION if it contributes to an analysis, publication, report, or 
 > White RT. **NEXCISION: exact, validated, and scalable excision of genomic regions from phylogenomic NEXUS matrices.** *bioRxiv* [Preprint]. 2026. doi: [https://doi.org/10.64898/2026.07.26.740842](https://doi.org/10.64898/2026.07.26.740842)
 
 GitHub citation metadata are provided in [`CITATION.cff`](CITATION.cff).
+
+The current software release, **NEXCISION v0.2.0**, is archived at Zenodo with DOI [10.5281/zenodo.23357032](https://doi.org/10.5281/zenodo.23357032). The concept DOI covering all releases is [10.5281/zenodo.21936048](https://doi.org/10.5281/zenodo.21936048).
 
 The complete validation and benchmarking materials are available in the
 [NEXCISION benchmarking repository](https://github.com/RhysWhite/nexcision-benchmarking), archived at Zenodo with DOI [10.5281/zenodo.21935598](https://doi.org/10.5281/zenodo.21935598).

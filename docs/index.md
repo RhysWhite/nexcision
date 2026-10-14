@@ -48,7 +48,9 @@ Coordinates in the regions file are 1-based and inclusive. Existing outputs are 
 
 ## Citation and archival records
 
-The NEXCISION v0.1.1 software release is archived in Zenodo with DOI **10.5281/zenodo.21936049**.
+The current NEXCISION v0.2.0 release is archived in Zenodo with DOI **[10.5281/zenodo.23357032](https://doi.org/10.5281/zenodo.23357032)**.
+
+The earlier v0.1.1 release remains archived under **10.5281/zenodo.21936049**. The concept DOI for all NEXCISION releases is **10.5281/zenodo.21936048**.
 
 The benchmarking and validation release is archived separately with DOI **10.5281/zenodo.21935598**.
 

@@ -110,6 +110,10 @@ The repository test workflow runs the test suite on Python 3.10–3.14 across Ub
 
 ## Archival release
 
-NEXCISION v0.1.1 is archived in Zenodo:
+NEXCISION v0.2.0 is archived in Zenodo:
 
-**DOI:** [10.5281/zenodo.21936049](https://doi.org/10.5281/zenodo.21936049)
+**DOI:** [10.5281/zenodo.23357032](https://doi.org/10.5281/zenodo.23357032)
+
+The previous v0.1.1 release remains available at [10.5281/zenodo.21936049](https://doi.org/10.5281/zenodo.21936049).
+
+The concept DOI covering all software versions is [10.5281/zenodo.21936048](https://doi.org/10.5281/zenodo.21936048).

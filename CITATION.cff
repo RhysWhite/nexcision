@@ -8,7 +8,11 @@ authors:
 version: 0.2.0
 date-released: 2026-10-14
 repository-code: "https://github.com/RhysWhite/nexcision"
-doi: "10.5281/zenodo.21936048"
+doi: "10.5281/zenodo.23357032"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.21936048"
+    description: "Concept DOI covering all NEXCISION releases"
 license: MIT
 abstract: >-
   Precise region-based excision of coordinate-labelled rows from NEXUS
